@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from 'react'
 import dayjs from 'dayjs'
 import 'dayjs/locale/ja'
 import { useFavorites } from '@/hooks/useFavorites'
+import { isHoliday } from '@/lib/holidays'
 import type { Festival, FestivalYear, LotteryPeriod } from '@/types'
 
 dayjs.locale('ja')
@@ -130,7 +131,7 @@ export function EventCalendar({ festivals }: { festivals: FestivalWithYears[] })
           <div
             key={w}
             className={`text-[10px] text-center py-0.5 ${
-              i === 0 ? 'text-red-400/60' : i === 6 ? 'text-blue-400/60' : 'text-white/40'
+              i === 0 || i === 6 ? 'text-red-500' : 'text-white/40'
             }`}
           >
             {w}
@@ -147,23 +148,25 @@ export function EventCalendar({ festivals }: { festivals: FestivalWithYears[] })
           const isFav = favDateSet.has(ymd)
           const selected = isSelected(d)
           const isToday = d.isSame(dayjs(), 'day')
+          const dow = d.day() // 0:日 6:土
+          const isWeekendOrHoliday = dow === 0 || dow === 6 || isHoliday(ymd)
+          // ベース文字色（イベント/お気に入り/選択中で上書きされない場合のフォールバック）
+          const defaultTextCls = !isCurMonth
+            ? (isWeekendOrHoliday ? 'text-red-500/40' : 'text-white/15')
+            : (isWeekendOrHoliday ? 'text-red-500 font-semibold' : 'text-white/40')
           return (
             <button
               key={i}
               onClick={() => hasEvent && setDateFilter(ymd)}
               disabled={!hasEvent || isPending}
               className={`aspect-square text-xs rounded-md transition-all ${
-                !isCurMonth ? 'text-white/15' : ''
-              } ${
                 selected
                   ? 'bg-amber-400 text-night-950 font-bold ring-2 ring-amber-400/50'
                   : isFav
                     ? 'bg-red-500/35 text-red-100 border border-red-400/60 hover:bg-red-500/55 cursor-pointer font-bold'
                     : hasEvent
-                      ? 'bg-sky-500/30 text-sky-200 border border-sky-400/40 hover:bg-sky-500/50 cursor-pointer font-medium'
-                      : isCurMonth
-                        ? 'text-white/40 cursor-default'
-                        : 'cursor-default'
+                      ? `bg-sky-500/30 ${isWeekendOrHoliday ? 'text-red-400 font-bold' : 'text-sky-200'} border border-sky-400/40 hover:bg-sky-500/50 cursor-pointer font-medium`
+                      : `${defaultTextCls} cursor-default`
               } ${
                 isToday && !selected ? 'ring-2 ring-emerald-400/80 ring-inset' : ''
               }`}
