@@ -23,7 +23,7 @@ export function TierFilter() {
     if (next.has(key)) next.delete(key)
     else next.add(key)
     const params = new URLSearchParams(searchParams.toString())
-    if (next.size === 0 || next.size === TIERS.length) params.delete('tier')
+    if (next.size === 0) params.delete('tier')
     else params.set('tier', [...next].join(','))
     startTransition(() => router.push(`${pathname}?${params.toString()}`))
   }
