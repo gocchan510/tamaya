@@ -1,65 +1,92 @@
-import Image from "next/image";
+import { Suspense } from 'react'
+import { createClient } from '@/lib/supabase/server'
 
-export default function Home() {
+export const dynamic = 'force-dynamic'
+
+import { SortToggle } from '@/components/festivals/SortToggle'
+import { FilterToggle } from '@/components/festivals/FilterToggle'
+import { MonthFilter } from '@/components/festivals/MonthFilter'
+import { TierFilter } from '@/components/festivals/TierFilter'
+import { TabSwitcher } from '@/components/festivals/TabSwitcher'
+import { FestivalList } from '@/components/festivals/FestivalList'
+import { EventCalendar } from '@/components/festivals/EventCalendar'
+import { Stars } from '@/components/ui/Stars'
+import type { Festival, FestivalYear, LotteryPeriod } from '@/types'
+
+type FestivalWithYears = Festival & { festival_years: (FestivalYear & { lottery_periods: LotteryPeriod[] })[] }
+
+export default async function Home() {
+  const supabase = await createClient()
+
+  const { data: festivals } = await supabase
+    .from('festivals')
+    .select('*, festival_years(*, lottery_periods(*))')
+    .order('ranking_score', { ascending: false })
+
+  const all = (festivals ?? []) as FestivalWithYears[]
+
+  // カレンダー用：開催日 → festival_id[] のマップ（複数日対応）
+  const eventMap: Record<string, string[]> = {}
+  for (const f of all) {
+    const y = f.festival_years?.[0]
+    if (!y?.date) continue
+    const start = new Date(y.date)
+    const end = y.end_date ? new Date(y.end_date) : start
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const ymd = d.toISOString().slice(0, 10)
+      ;(eventMap[ymd] ??= []).push(f.id)
+    }
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="relative min-h-dvh">
+      <Stars />
+
+      <div className="relative z-10 max-w-2xl mx-auto px-4 pb-16">
+        {/* ヘッダー */}
+        <header className="pt-14 pb-10 text-center">
+          <p className="text-xs tracking-[0.3em] text-amber-400/60 uppercase mb-3">Japan Fireworks Guide</p>
+          <h1 className="text-4xl font-bold tracking-tight glow-gold text-amber-300 mb-1">
+            たまや
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-sm text-white/30 tracking-widest">TAMAYA</p>
+          <p className="text-white/40 text-sm mt-4">
+            全国主要{all.length}大会の日程・抽選・天気を一覧
           </p>
+        </header>
+
+        {/* タブ + ソート + フィルタ */}
+        <div className="flex flex-col items-center gap-3 mb-8">
+          <Suspense>
+            <TabSwitcher />
+          </Suspense>
+          <Suspense>
+            <SortToggle />
+          </Suspense>
+          <Suspense>
+            <TierFilter />
+          </Suspense>
+          <Suspense>
+            <MonthFilter />
+          </Suspense>
+          <Suspense>
+            <EventCalendar eventMap={eventMap} />
+          </Suspense>
+          <Suspense>
+            <FilterToggle />
+          </Suspense>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+
+        {/* 一覧 */}
+        <Suspense>
+          <FestivalList festivals={all} />
+        </Suspense>
+
+        {/* フッター */}
+        <footer className="text-center mt-12 text-white/20 text-xs">
+          © 2025 Tamaya
+        </footer>
+      </div>
     </div>
-  );
+  )
 }

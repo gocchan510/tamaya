@@ -36,6 +36,12 @@ yarn-error.log*
 # vercel
 .vercel
 
+# local maintenance scripts (contain hardcoded Supabase service_role key)
+scripts/
+
+# claude code
+.claude/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
