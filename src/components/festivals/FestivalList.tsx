@@ -7,6 +7,18 @@ import type { Festival, FestivalYear, LotteryPeriod } from '@/types'
 
 type FestivalWithYears = Festival & { festival_years: (FestivalYear & { lottery_periods: LotteryPeriod[] })[] }
 
+// festival_year から該当する全日付を返す（event_dates 優先、なければ date..end_date）
+function collectDates(y: FestivalYear): string[] {
+  if (y.event_dates && y.event_dates.length > 0) return y.event_dates
+  if (!y.date) return []
+  if (!y.end_date) return [y.date]
+  const dates: string[] = []
+  for (let d = new Date(y.date); d <= new Date(y.end_date); d.setDate(d.getDate() + 1)) {
+    dates.push(d.toISOString().slice(0, 10))
+  }
+  return dates
+}
+
 export function FestivalList({ festivals }: { festivals: FestivalWithYears[] }) {
   const searchParams = useSearchParams()
   const tab = searchParams.get('tab') ?? 'all'
@@ -30,18 +42,22 @@ export function FestivalList({ festivals }: { festivals: FestivalWithYears[] }) 
     if (month) {
       const m = parseInt(month, 10)
       l = l.filter(f => {
-        const d = f.festival_years?.[0]?.date
-        if (!d) return false
-        return new Date(d).getMonth() + 1 === m
+        const y = f.festival_years?.[0]
+        if (!y) return false
+        const dates = collectDates(y)
+        return dates.some(d => new Date(d).getMonth() + 1 === m)
       })
     }
     if (from || to) {
       l = l.filter(f => {
-        const d = f.festival_years?.[0]?.date
-        if (!d) return false
-        if (from && d < from) return false
-        if (to && d > to) return false
-        return true
+        const y = f.festival_years?.[0]
+        if (!y) return false
+        const dates = collectDates(y)
+        return dates.some(d => {
+          if (from && d < from) return false
+          if (to && d > to) return false
+          return true
+        })
       })
     }
     if (filter === 'open') {

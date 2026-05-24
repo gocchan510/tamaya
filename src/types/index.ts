@@ -26,6 +26,7 @@ export interface FestivalYear {
   year: number
   date: string | null
   end_date: string | null
+  event_dates: string[] | null
   status: FestivalStatus
   fireworks_count: number | null
   expected_attendance: number | null

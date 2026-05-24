@@ -131,6 +131,19 @@ export default async function FestivalPage(props: { params: Promise<{ id: string
             <span className="inline-block text-sm text-red-400 bg-red-400/10 border border-red-400/20 px-3 py-1 rounded-full">
               2026年 開催中止
             </span>
+          ) : year?.event_dates && year.event_dates.length > 0 ? (
+            <div className="flex flex-col gap-1">
+              <span className="text-lg text-amber-300 font-semibold">
+                {year.event_dates.length}日間開催（{dayjs(year.event_dates[0]).format('YYYY年M月D日')} 〜）
+              </span>
+              <div className="flex flex-wrap gap-1.5 mt-1">
+                {(year.event_dates as string[]).map((d: string) => (
+                  <span key={d} className="text-xs px-2 py-0.5 rounded-md bg-amber-400/10 text-amber-300/90 border border-amber-400/20">
+                    {dayjs(d).format('M/D（dd）')}
+                  </span>
+                ))}
+              </div>
+            </div>
           ) : year?.date && (
             <div className="flex items-center gap-2">
               <span className="text-lg text-amber-300 font-semibold">

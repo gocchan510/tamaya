@@ -134,6 +134,14 @@ export function FestivalCard({ festival, year, rank, lotteries = [] }: Props) {
             <div className="flex items-center gap-2 mt-1.5">
               {year?.status === 'cancelled' ? (
                 <span className="text-xs text-red-400/70">開催中止</span>
+              ) : year?.event_dates && year.event_dates.length > 0 ? (
+                <>
+                  <p className="text-sm text-white/50">
+                    {year.event_dates.length <= 3
+                      ? year.event_dates.map(d => dayjs(d).format('M/D')).join(', ')
+                      : `${dayjs(year.event_dates[0]).format('M/D')} 他${year.event_dates.length - 1}日`}
+                  </p>
+                </>
               ) : year?.date ? (
                 <>
                   <p className="text-sm text-white/50">

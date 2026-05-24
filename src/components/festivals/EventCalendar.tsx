@@ -4,19 +4,59 @@ import { useMemo, useState, useTransition } from 'react'
 import dayjs from 'dayjs'
 import 'dayjs/locale/ja'
 import { useFavorites } from '@/hooks/useFavorites'
+import type { Festival, FestivalYear, LotteryPeriod } from '@/types'
 
 dayjs.locale('ja')
 
+type FestivalWithYears = Festival & { festival_years: (FestivalYear & { lottery_periods: LotteryPeriod[] })[] }
+
 const WEEK = ['日', '月', '火', '水', '木', '金', '土']
 
-export function EventCalendar({ eventMap }: { eventMap: Record<string, string[]> }) {
-  const { ids: favIds } = useFavorites()
+function buildEventMap(festivals: FestivalWithYears[]): Record<string, string[]> {
+  const map: Record<string, string[]> = {}
+  for (const f of festivals) {
+    const y = f.festival_years?.[0]
+    if (!y) continue
+    // event_dates 優先（複数回打ち上げ型）
+    if (y.event_dates && y.event_dates.length > 0) {
+      for (const d of y.event_dates) {
+        ;(map[d] ??= []).push(f.id)
+      }
+      continue
+    }
+    if (!y.date) continue
+    const start = new Date(y.date)
+    const end = y.end_date ? new Date(y.end_date) : start
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const ymd = d.toISOString().slice(0, 10)
+      ;(map[ymd] ??= []).push(f.id)
+    }
+  }
+  return map
+}
+
+export function EventCalendar({ festivals }: { festivals: FestivalWithYears[] }) {
+  const { ids: favIds, loaded } = useFavorites()
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const [isPending, startTransition] = useTransition()
   const from = searchParams.get('from')
   const to = searchParams.get('to')
+  const tab = searchParams.get('tab') ?? 'all'
+  const tierRaw = searchParams.get('tier') ?? 'xl,l'
+  const tierSet = useMemo(() => new Set(tierRaw.split(',').filter(Boolean)), [tierRaw])
+
+  // フィルタ適用：tabがfavoritesならお気に入りのみ、そうでなければtierで絞り込み
+  const filteredFestivals = useMemo(() => {
+    if (tab === 'favorites') {
+      if (!loaded) return []
+      return festivals.filter(f => favIds.has(f.id))
+    }
+    return festivals.filter(f => tierSet.has(f.tier ?? 'unverified'))
+  }, [festivals, tab, tierSet, favIds, loaded])
+
+  const eventMap = useMemo(() => buildEventMap(filteredFestivals), [filteredFestivals])
 
   // 表示中の月: 最初の開催月を初期値、なければ今月
   const firstEventMonth = useMemo(() => {
@@ -37,13 +77,12 @@ export function EventCalendar({ eventMap }: { eventMap: Record<string, string[]>
 
   // カレンダーグリッド (6週 x 7日)
   const startOfMonth = view.startOf('month')
-  const gridStart = startOfMonth.startOf('week') // 日曜開始
+  const gridStart = startOfMonth.startOf('week')
   const days: dayjs.Dayjs[] = []
   for (let i = 0; i < 42; i++) days.push(gridStart.add(i, 'day'))
 
   const setDateFilter = (dateStr: string) => {
     const params = new URLSearchParams(searchParams.toString())
-    // 同じ日を再クリックでクリア
     if (from === dateStr && to === dateStr) {
       params.delete('from')
       params.delete('to')

@@ -25,19 +25,6 @@ export default async function Home() {
 
   const all = (festivals ?? []) as FestivalWithYears[]
 
-  // カレンダー用：開催日 → festival_id[] のマップ（複数日対応）
-  const eventMap: Record<string, string[]> = {}
-  for (const f of all) {
-    const y = f.festival_years?.[0]
-    if (!y?.date) continue
-    const start = new Date(y.date)
-    const end = y.end_date ? new Date(y.end_date) : start
-    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      const ymd = d.toISOString().slice(0, 10)
-      ;(eventMap[ymd] ??= []).push(f.id)
-    }
-  }
-
   return (
     <div className="relative min-h-dvh">
       <Stars />
@@ -70,7 +57,7 @@ export default async function Home() {
             <MonthFilter />
           </Suspense>
           <Suspense>
-            <EventCalendar eventMap={eventMap} />
+            <EventCalendar festivals={all} />
           </Suspense>
           <Suspense>
             <FilterToggle />

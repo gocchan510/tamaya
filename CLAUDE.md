@@ -1,1 +1,140 @@
 @AGENTS.md
+
+# Tamaya（たまや）— 花火大会ガイド
+
+全国の花火大会の日程・有料席販売情報・天気をまとめるPWA。
+
+- **本番**: https://tamaya-iota.vercel.app
+- **GitHub**: https://github.com/gocchan510/tamaya
+- **DB（Supabase）**: `https://cjotemmzfdogmbunbrjh.supabase.co`（リージョン: Tokyo）
+
+## 技術スタック
+
+- Next.js 16.2.4 (App Router, Turbopack, Server Components)
+- TypeScript / Tailwind CSS v4
+- Supabase (PostgreSQL + RLS)
+- Vercel ホスティング、GitHub連携で自動デプロイ
+- PWA: manifest + `public/sw.js`（オフライン対応・cache-first）
+
+## DBスキーマ要点
+
+```
+festivals (id, name, prefecture, city, lat, lng,
+           official_url, walkerplus_url, description,
+           ranking_score, tier)
+festival_years (id, festival_id, year,
+                date, end_date, event_dates,  -- 単日/連続/不連続を区別
+                status, fireworks_count, expected_attendance,
+                date_confirmed, paid_seats_status)
+lottery_periods (id, festival_year_id, seat_name,
+                 lottery_start_at, lottery_end_at, lottery_url)
+scrape_logs (id, ran_at, target_count, success, inserted,
+             updated, skipped, failed, report)
+```
+
+### 日程表現の使い分け
+- **単日**: `date` のみ
+- **連続複数日（毎日花火）**: `date` + `end_date`（範囲）
+- **不連続複数日（期間中の特定日に複数回打ち上げ）**: `event_dates: jsonb` 配列を使用
+- **完全に未定**: `date=null`、`status='scheduled'`
+
+### ティア判定式（幾何平均）
+```js
+score = sqrt((fireworks_count/1000) * (expected_attendance/10000))
+// 片方しか無ければ ある方/2
+xl: score≥20, l: score≥8, m: score≥3, s: score<3, unverified: 規模情報なし
+```
+
+## アーキテクチャ要点
+
+- **`dynamic = 'force-dynamic'`**: page.tsx / festivals/[id]/page.tsx は毎リクエストfresh fetch
+- **ティアフィルタはクライアント側で適用**: URLパラメータ `?tier=xl,l,m,s,unverified`
+- **EventCalendar**: ティアフィルタとお気に入りタブを反映して「表示中の大会の開催日」だけ青く点灯
+- **お気に入り**: localStorage（`tamaya:favorites`）、`useSyncExternalStore` で共有
+- **Supabase free tier 制約**: 7日間アクセス無いとpauseされる → daily scraperでアクセスして回避
+
+## デプロイ運用
+
+- ローカル開発 (`npm run dev`) で動作確認 → 区切りでまとめてGitHub push → Vercel自動デプロイ
+- DB変更は即座にローカル・本番両方に反映（DB共有）
+
+## 環境変数（Vercel + .env.local）
+
+```
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY
+SUPABASE_SERVICE_ROLE_KEY  -- サーバー側のみ（クライアントに漏らさない）
+SUPABASE_PAT               -- DDL用、ローカルのみ（scriptsで使用）
+```
+
+## scripts/ ディレクトリ
+
+`.gitignore` で除外（service_role keyをハードコードしているため）。  
+ローカルメンテナンス専用ツール。push禁止。
+
+## Supabase 管理API（PAT経由）
+
+DDL（`ALTER TABLE` 等）は Management API で実行:
+```bash
+curl -X POST 'https://api.supabase.com/v1/projects/{ref}/database/query' \
+  -H 'Authorization: Bearer sbp_...' \
+  -H 'Content-Type: application/json' \
+  -d '{"query": "alter table ..."}'
+```
+
+## 重要な制約・運用ルール
+
+- **public repo**: secrets は絶対に commit しない（`scripts/`, `.env*`, `.claude/` は `.gitignore`）
+- **日本語含むJSONをcurlで送る時**: Git Bashで引数渡しは壊れるので、`--data @/tmp/payload.json` のファイル経由必須
+- **冪等性**: scraperは「既存名一致 or 緯度経度0.5km以内」でdedup
+- **scrape は Anthropic scheduled task で routine 化**（現在 disabled）
+  - trigger_id: `trig_011ocjgQHRSddejXHALLQnx9`
+  - 毎日 18:00 UTC（03:00 JST）にWalker+起点でスクレイプ予定
+
+---
+
+# 更新履歴
+
+## 2026-05-24
+
+### データ拡張
+- **Phase 1〜4 で 45 → 191大会** に拡張（関東Walker+ 完全網羅）
+  - XL: 30 / L: 32 / M: 49 / S: 72 / unverified: 8
+- ティアスコア式を **幾何平均（√積）** ベースに統一
+- `tier` カラムを `festivals` に追加（`xl/l/m/s/unverified`）
+- `event_dates jsonb` カラムを `festival_years` に追加
+- `paid_seats_status text` カラムを `festival_years` に追加（`available/none/unknown`）
+- `end_date date` カラムを `festival_years` に追加
+- `scrape_logs` テーブル追加（自動スクレイプログ用）
+- `walkerplus_url` カラムを `festivals` に追加
+- ところざわ花火大会を削除（実在しない疑い、所沢の花火は西武園ゆうえんち大火祭りのみ）
+
+### UI機能
+- お気に入り（localStorage） + タブ切り替え
+- ティアフィルタ（XL/L/M/S/規模不明、デフォルトXL+L）
+- 月別フィルタ + 日付範囲ピッカー
+- ミニカレンダー（開催日/お気に入り/今日/選択中を色分け）
+- 受付中のみフィルタ
+- 受付中の有料席は全件表示（複数あれば全部スタック）
+- 終了した抽選もグレーアウト表示
+- 有料席ありタグ
+- ソート: 人気順 / 日程順
+- 複数日開催対応（連続: end_date / 不連続: event_dates）
+
+### 公式URL監査
+- 全47件HTTP生存確認
+- 14件の死んだ/間違ったURLを正しい公式URLに置換
+- Walker+を公式URLとして登録していた3件（足立・八王子・足利）を修正
+
+### スクレイパー
+- Walker+起点 + 外部チケットサイト（ぴあ・イープラス・ローチケ・FANY・ふるさと納税等）追跡
+- daily scheduled task として trigger 設定（現在disabled、cron時刻 18:00 UTC）
+
+### デプロイ
+- Vercel本番化（https://tamaya-iota.vercel.app）
+- PWA対応（manifest, アイコン, service worker）
+
+### 設計修正
+- 複数日開催の正確な日程取得（阿字ヶ浦6日・天津小湊毎晩・小川町・ひたちなかは土曜のみ等）
+- カレンダーがティア/タブフィルタを反映するように修正
+- TierFilter のバグ修正（全選択時に param 削除されて XL+L に戻る問題）
