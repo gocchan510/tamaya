@@ -7,6 +7,7 @@ const TIERS = [
   { key: 'l',  label: '⭐ 中規模', cls: 'bg-sky-500/90 text-night-950 border-sky-500/90' },
   { key: 'm',  label: '◇ 小規模', cls: 'bg-white/30 text-white/90 border-white/40' },
   { key: 's',  label: '・ 極小',   cls: 'bg-white/15 text-white/80 border-white/20' },
+  { key: 'unverified', label: '? 規模不明', cls: 'bg-purple-500/30 text-purple-200 border-purple-400/40' },
 ] as const
 
 export function TierFilter() {
