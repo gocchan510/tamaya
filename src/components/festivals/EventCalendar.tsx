@@ -47,25 +47,52 @@ export function EventCalendar({ festivals }: { festivals: FestivalWithYears[] })
   const tab = searchParams.get('tab') ?? 'all'
   const tierRaw = searchParams.get('tier') ?? 'xl,l'
   const tierSet = useMemo(() => new Set(tierRaw.split(',').filter(Boolean)), [tierRaw])
+  const dstatusRaw = searchParams.get('dstatus') ?? 'confirmed,estimated,undetermined'
+  const dstatusSet = useMemo(() => new Set(dstatusRaw.split(',').filter(Boolean)), [dstatusRaw])
+  const q = (searchParams.get('q') ?? '').trim().toLowerCase()
+  const prefRaw = searchParams.get('pref') ?? ''
+  const prefSet = useMemo(() => new Set(prefRaw.split(',').filter(Boolean)), [prefRaw])
 
   // フィルタ適用：tabがfavoritesならお気に入りのみ、そうでなければtierで絞り込み
   const filteredFestivals = useMemo(() => {
+    let l = festivals
     if (tab === 'favorites') {
       if (!loaded) return []
-      return festivals.filter(f => favIds.has(f.id))
+      l = l.filter(f => favIds.has(f.id))
+    } else {
+      l = l.filter(f => tierSet.has(f.tier ?? 'unverified'))
     }
-    return festivals.filter(f => tierSet.has(f.tier ?? 'unverified'))
-  }, [festivals, tab, tierSet, favIds, loaded])
+    // 日程ステータス（終了込み）
+    const todayStr = new Date().toISOString().slice(0, 10)
+    l = l.filter(f => {
+      const y = f.festival_years?.[0]
+      if (!y || !y.date) return dstatusSet.has('undetermined')
+      const dates = (y.event_dates && y.event_dates.length > 0)
+        ? y.event_dates
+        : (y.end_date ? [y.date, y.end_date] : [y.date])
+      const ended = dates[dates.length - 1] < todayStr
+      if (ended) return dstatusSet.has('ended')
+      return y.date_confirmed ? dstatusSet.has('confirmed') : dstatusSet.has('estimated')
+    })
+    // 検索
+    if (q) {
+      l = l.filter(f =>
+        f.name.toLowerCase().includes(q) ||
+        f.prefecture.toLowerCase().includes(q) ||
+        f.city.toLowerCase().includes(q)
+      )
+    }
+    // 都道府県
+    if (prefSet.size > 0) {
+      l = l.filter(f => prefSet.has(f.prefecture))
+    }
+    return l
+  }, [festivals, tab, tierSet, dstatusSet, q, prefSet, favIds, loaded])
 
   const eventMap = useMemo(() => buildEventMap(filteredFestivals), [filteredFestivals])
 
-  // 表示中の月: 最初の開催月を初期値、なければ今月
-  const firstEventMonth = useMemo(() => {
-    const keys = Object.keys(eventMap).sort()
-    if (!keys.length) return dayjs()
-    return dayjs(keys[0]).startOf('month')
-  }, [eventMap])
-  const [view, setView] = useState(firstEventMonth)
+  // 表示中の月: 今月を初期値（ユーザーが手動で他の月に動かせる）
+  const [view, setView] = useState(() => dayjs().startOf('month'))
 
   // お気に入り開催日Set
   const favDateSet = useMemo(() => {

@@ -7,7 +7,11 @@ import { SortToggle } from '@/components/festivals/SortToggle'
 import { FilterToggle } from '@/components/festivals/FilterToggle'
 import { MonthFilter } from '@/components/festivals/MonthFilter'
 import { TierFilter } from '@/components/festivals/TierFilter'
+import { DateStatusFilter } from '@/components/festivals/DateStatusFilter'
+import { SourceFilter } from '@/components/festivals/SourceFilter'
+import { PrefectureFilter } from '@/components/festivals/PrefectureFilter'
 import { TabSwitcher } from '@/components/festivals/TabSwitcher'
+import { SearchBox } from '@/components/festivals/SearchBox'
 import { FestivalList } from '@/components/festivals/FestivalList'
 import { EventCalendar } from '@/components/festivals/EventCalendar'
 import { Stars } from '@/components/ui/Stars'
@@ -24,6 +28,9 @@ export default async function Home() {
     .order('ranking_score', { ascending: false })
 
   const all = (festivals ?? []) as FestivalWithYears[]
+
+  // 都道府県の一覧（重複排除）
+  const availablePrefectures = Array.from(new Set(all.map(f => f.prefecture))).sort()
 
   return (
     <div className="relative min-h-dvh">
@@ -48,10 +55,22 @@ export default async function Home() {
             <TabSwitcher />
           </Suspense>
           <Suspense>
+            <SearchBox candidates={all.map(f => ({ id: f.id, name: f.name, prefecture: f.prefecture, city: f.city, tier: f.tier }))} />
+          </Suspense>
+          <Suspense>
             <SortToggle />
           </Suspense>
           <Suspense>
+            <PrefectureFilter available={availablePrefectures} />
+          </Suspense>
+          <Suspense>
             <TierFilter />
+          </Suspense>
+          <Suspense>
+            <DateStatusFilter />
+          </Suspense>
+          <Suspense>
+            <SourceFilter />
           </Suspense>
           <Suspense>
             <MonthFilter />

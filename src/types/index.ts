@@ -16,6 +16,7 @@ export interface Festival {
   description: string | null
   ranking_score: number
   tier: Tier | null
+  sources: string[] | null
   created_at: string
   updated_at: string
 }

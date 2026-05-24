@@ -56,6 +56,14 @@ const TIER_BADGES: Record<string, { label: string; cls: string }> = {
   unverified: { label: '?', cls: 'bg-white/5 text-white/30 border-white/10' },
 }
 
+const SOURCE_BADGES: Record<string, { label: string; cls: string }> = {
+  walkerplus: { label: 'W+',   cls: 'bg-cyan-500/15 text-cyan-300 border-cyan-400/30' },
+  jalan:      { label: 'じゃ', cls: 'bg-orange-400/15 text-orange-300 border-orange-400/30' },
+  rurubu:     { label: 'るる', cls: 'bg-fuchsia-500/15 text-fuchsia-300 border-fuchsia-400/30' },
+  jorudan:    { label: 'ジョ', cls: 'bg-green-500/15 text-green-300 border-green-400/30' },
+  ekitan:     { label: '駅探', cls: 'bg-rose-500/15 text-rose-300 border-rose-400/30' },
+}
+
 const SPARK_COLORS = [
   'bg-amber-400',
   'bg-orange-400',
@@ -95,7 +103,7 @@ export function FestivalCard({ festival, year, rank, lotteries = [] }: Props) {
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
               <div>
-                <div className="flex items-center gap-1.5 mb-0.5">
+                <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
                   <p className="text-xs text-white/40">
                     {festival.prefecture} {festival.city}
                   </p>
@@ -104,6 +112,11 @@ export function FestivalCard({ festival, year, rank, lotteries = [] }: Props) {
                       {TIER_BADGES[festival.tier].label}
                     </span>
                   )}
+                  {(festival.sources ?? []).map(src => SOURCE_BADGES[src] && (
+                    <span key={src} className={`text-[9px] px-1.5 py-px rounded border ${SOURCE_BADGES[src].cls}`} title={src}>
+                      {SOURCE_BADGES[src].label}
+                    </span>
+                  ))}
                 </div>
                 <h2 className="text-base font-semibold text-white/90 leading-tight group-hover:text-amber-300 transition-colors">
                   {festival.name}
