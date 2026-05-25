@@ -62,6 +62,13 @@ const SOURCE_BADGES: Record<string, { label: string; cls: string }> = {
   rurubu:     { label: 'るる', cls: 'bg-fuchsia-500/15 text-fuchsia-300 border-fuchsia-400/30' },
   jorudan:    { label: 'ジョ', cls: 'bg-green-500/15 text-green-300 border-green-400/30' },
   ekitan:     { label: '駅探', cls: 'bg-rose-500/15 text-rose-300 border-rose-400/30' },
+  sorahanabi: { label: '空',   cls: 'bg-indigo-400/15 text-indigo-300 border-indigo-400/30' },
+  kankou:     { label: '観光', cls: 'bg-yellow-500/15 text-yellow-300 border-yellow-400/30' },
+  furusato_choice: { label: 'ふる', cls: 'bg-red-500/15 text-red-300 border-red-400/30' },
+  ticket_pia: { label: 'ぴあ', cls: 'bg-red-600/15 text-red-300 border-red-600/30' },
+  eplus:      { label: 'eプ', cls: 'bg-lime-500/15 text-lime-300 border-lime-400/30' },
+  hanabier:   { label: 'Hb',  cls: 'bg-teal-500/15 text-teal-300 border-teal-400/30' },
+  wikipedia:  { label: 'Wp',  cls: 'bg-slate-400/15 text-slate-300 border-slate-400/30' },
 }
 
 const SPARK_COLORS = [
@@ -173,6 +180,11 @@ export function FestivalCard({ festival, year, rank, lotteries = [] }: Props) {
               ) : (
                 <span className="text-xs text-white/25">日程未定</span>
               )}
+              {year?.start_time && (
+                <span className="text-xs text-white/40">
+                  🕐 {year.start_time.slice(0, 5)}{year.end_time ? `〜${year.end_time.slice(0, 5)}` : ''}
+                </span>
+              )}
             </div>
 
             {/* タグ行 */}
@@ -182,6 +194,9 @@ export function FestivalCard({ festival, year, rank, lotteries = [] }: Props) {
               )}
               {year?.expected_attendance && (
                 <Tag icon="◎" label={`例年${formatCount(year.expected_attendance)}人`} />
+              )}
+              {year?.max_shell_size && (
+                <Tag icon="◉" label={`最大${year.max_shell_size}`} />
               )}
               {year?.paid_seats_status === 'available' && (
                 <Tag icon="🎟" label="有料席あり" tone="emerald" />

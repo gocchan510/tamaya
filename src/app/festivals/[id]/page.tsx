@@ -123,6 +123,9 @@ export default async function FestivalPage(props: { params: Promise<{ id: string
             <div>
               <p className="text-xs text-white/40 mb-1">{festival.prefecture} {festival.city}</p>
               <h1 className="text-2xl font-bold text-white/90 leading-tight">{festival.name}</h1>
+              {festival.venue && (
+                <p className="text-xs text-white/50 mt-1">📍 {festival.venue}</p>
+              )}
             </div>
             <FavoriteButton festivalId={festival.id} />
           </div>
@@ -160,11 +163,16 @@ export default async function FestivalPage(props: { params: Promise<{ id: string
               }
             </div>
           )}
+          {year?.start_time && (
+            <p className="text-sm text-white/60 mt-2">
+              🕐 {year.start_time.slice(0, 5)}{year.end_time ? ` 〜 ${year.end_time.slice(0, 5)}` : ' 開始'}
+            </p>
+          )}
         </div>
 
         {/* 規模情報 */}
-        {year && (year.fireworks_count || year.expected_attendance) && (
-          <div className="glass rounded-2xl p-4 mb-6 flex gap-6">
+        {year && (year.fireworks_count || year.expected_attendance || year.max_shell_size) && (
+          <div className="glass rounded-2xl p-4 mb-6 flex flex-wrap gap-6">
             {year.fireworks_count && (
               <div>
                 <p className="text-xs text-white/30 mb-0.5">打ち上げ数</p>
@@ -183,6 +191,12 @@ export default async function FestivalPage(props: { params: Promise<{ id: string
                     ? `${(year.expected_attendance / 10000).toFixed(0)}万人`
                     : `${year.expected_attendance.toLocaleString()}人`}
                 </p>
+              </div>
+            )}
+            {year.max_shell_size && (
+              <div>
+                <p className="text-xs text-white/30 mb-0.5">最大号数</p>
+                <p className="text-xl font-bold text-amber-300/90">{year.max_shell_size}</p>
               </div>
             )}
           </div>

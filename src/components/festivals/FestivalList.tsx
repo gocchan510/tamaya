@@ -26,6 +26,23 @@ function isEnded(y: FestivalYear, todayStr: string): boolean {
   return dates[dates.length - 1] < todayStr
 }
 
+// 最大号数の文字列から数値（号）へ変換
+function shellSizeNumeric(s: string | null | undefined): number {
+  if (!s) return 0
+  // "○号" 形式
+  const m1 = s.match(/(\d+(?:\.\d+)?)\s*号/)
+  if (m1) return parseFloat(m1[1])
+  // "○尺玉" 形式（一尺 = 10号）
+  const sakuMap: Record<string, number> = {
+    '一': 10, '二': 20, '三': 30, '四': 40, '五': 50, '六': 60, '七': 70, '八': 80, '九': 90, '十': 100,
+  }
+  for (const [kanji, val] of Object.entries(sakuMap)) {
+    if (s.includes(kanji + '尺')) return val
+  }
+  if (s.includes('尺玉') || s.includes('尺')) return 10 // "尺玉" = 一尺玉
+  return 0
+}
+
 export function FestivalList({ festivals }: { festivals: FestivalWithYears[] }) {
   const searchParams = useSearchParams()
   const tab = searchParams.get('tab') ?? 'all'
@@ -116,6 +133,12 @@ export function FestivalList({ festivals }: { festivals: FestivalWithYears[] }) 
         const yb = b.festival_years?.[0]?.date ?? '9999'
         return ya.localeCompare(yb)
       })
+    } else if (sort === 'fireworks') {
+      l = [...l].sort((a, b) => (b.festival_years?.[0]?.fireworks_count ?? 0) - (a.festival_years?.[0]?.fireworks_count ?? 0))
+    } else if (sort === 'attendance') {
+      l = [...l].sort((a, b) => (b.festival_years?.[0]?.expected_attendance ?? 0) - (a.festival_years?.[0]?.expected_attendance ?? 0))
+    } else if (sort === 'shell') {
+      l = [...l].sort((a, b) => shellSizeNumeric(b.festival_years?.[0]?.max_shell_size) - shellSizeNumeric(a.festival_years?.[0]?.max_shell_size))
     }
     return l
   }, [festivals, tab, sort, filter, month, from, to, tierSet, dstatusSet, q, sourceSet, prefSet, ids, loaded])

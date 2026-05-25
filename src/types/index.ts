@@ -11,6 +11,7 @@ export interface Festival {
   city: string
   lat: number
   lng: number
+  venue: string | null
   official_url: string | null
   walkerplus_url: string | null
   description: string | null
@@ -28,6 +29,9 @@ export interface FestivalYear {
   date: string | null
   end_date: string | null
   event_dates: string[] | null
+  start_time: string | null
+  end_time: string | null
+  max_shell_size: string | null
   status: FestivalStatus
   fireworks_count: number | null
   expected_attendance: number | null

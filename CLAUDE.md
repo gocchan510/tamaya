@@ -195,3 +195,25 @@ curl -X POST 'https://api.supabase.com/v1/projects/{ref}/database/query' \
 ### MonthFilter 簡素化
 - 月別ピル（5月〜11月）を削除
 - 日付範囲ピッカー（from-to）のみ残す
+
+### ソース拡張（12ソース対応）
+- `sources` を Walker+/じゃらん/るるぶ/ジョルダン/駅探/空花火/観光協会/ふるさとチョイス/ぴあ/イープラス/Hanabier(hanabidia)/Wikipedia に拡大
+- SourceFilter ピル + FestivalCard バッジ全部対応
+- 5月時点で関東+静岡を **321件まで拡張**
+
+### スキーマ追加
+- `festivals.venue text` (会場名)
+- `festival_years.start_time time` / `end_time time` (打ち上げ時刻)
+- `festival_years.max_shell_size text` (最大号数: "二尺玉" "10号" 等)
+- それぞれUIに表示（カードにタグ、詳細に区画）
+
+### ソート機能拡張
+- SortToggle に「打上数」「来場者」「号数」追加
+- 号数は漢数字 "三尺玉" を 30号として解釈してソート
+
+### カレンダー: お気に入り有料席表示
+- カレンダーセルに金色の細い帯：お気に入り大会の lottery_periods 期間
+- カレンダー下に「♥ お気に入り大会の有料席」リスト
+  - 受付中/予定/終了 を色分け
+  - クリックで詳細ページ
+- 凡例にも 🎫 販売中 を追加

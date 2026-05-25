@@ -1,4 +1,5 @@
 'use client'
+import Link from 'next/link'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { useMemo, useState, useTransition } from 'react'
 import dayjs from 'dayjs'
@@ -103,6 +104,70 @@ export function EventCalendar({ festivals }: { festivals: FestivalWithYears[] })
     return s
   }, [eventMap, favIds])
 
+  // お気に入り大会の有料席販売日Set（開始日〜終了日の範囲を埋める）
+  const favSaleSet = useMemo(() => {
+    const s = new Set<string>()
+    if (!loaded) return s
+    for (const f of festivals) {
+      if (!favIds.has(f.id)) continue
+      const lots = f.festival_years?.[0]?.lottery_periods ?? []
+      for (const lp of lots) {
+        if (!lp.lottery_start_at) continue
+        const start = dayjs(lp.lottery_start_at)
+        const end = lp.lottery_end_at ? dayjs(lp.lottery_end_at) : start
+        for (let d = start; d.isBefore(end) || d.isSame(end, 'day'); d = d.add(1, 'day')) {
+          s.add(d.format('YYYY-MM-DD'))
+        }
+      }
+    }
+    return s
+  }, [festivals, favIds, loaded])
+
+  // お気に入り大会の販売スケジュール集計（リスト用）
+  const favLotteryRows = useMemo(() => {
+    if (!loaded) return []
+    const now = dayjs()
+    type Row = {
+      festivalId: string
+      festivalName: string
+      seatName: string
+      state: 'open' | 'upcoming' | 'ended'
+      sortKey: number
+      label: string
+    }
+    const rows: Row[] = []
+    for (const f of festivals) {
+      if (!favIds.has(f.id)) continue
+      const lots = f.festival_years?.[0]?.lottery_periods ?? []
+      for (const lp of lots) {
+        if (!lp.lottery_start_at) continue
+        const start = dayjs(lp.lottery_start_at)
+        const end = lp.lottery_end_at ? dayjs(lp.lottery_end_at) : null
+        let state: 'open' | 'upcoming' | 'ended'
+        let label = ''
+        if (start.isAfter(now)) {
+          state = 'upcoming'
+          label = `${start.format('M/D')}〜`
+        } else if (end && end.isBefore(now)) {
+          state = 'ended'
+          label = `${end.format('M/D')}終了`
+        } else {
+          state = 'open'
+          label = end ? `〜${end.format('M/D')}` : '受付中'
+        }
+        rows.push({
+          festivalId: f.id,
+          festivalName: f.name,
+          seatName: lp.seat_name.replace(/（.*?）/g, '').replace('（確定）', '').trim(),
+          state,
+          sortKey: state === 'open' ? 0 : state === 'upcoming' ? 1 : 2,
+          label,
+        })
+      }
+    }
+    return rows.sort((a, b) => a.sortKey - b.sortKey || a.festivalName.localeCompare(b.festivalName))
+  }, [festivals, favIds, loaded])
+
   // カレンダーグリッド (6週 x 7日)
   const startOfMonth = view.startOf('month')
   const gridStart = startOfMonth.startOf('week')
@@ -173,6 +238,7 @@ export function EventCalendar({ festivals }: { festivals: FestivalWithYears[] })
           const isCurMonth = d.month() === view.month()
           const hasEvent = !!eventMap[ymd]
           const isFav = favDateSet.has(ymd)
+          const hasSale = favSaleSet.has(ymd)
           const selected = isSelected(d)
           const isToday = d.isSame(dayjs(), 'day')
           const dow = d.day() // 0:日 6:土
@@ -186,7 +252,7 @@ export function EventCalendar({ festivals }: { festivals: FestivalWithYears[] })
               key={i}
               onClick={() => hasEvent && setDateFilter(ymd)}
               disabled={!hasEvent || isPending}
-              className={`aspect-square text-xs rounded-md transition-all ${
+              className={`relative aspect-square text-xs rounded-md transition-all ${
                 selected
                   ? 'bg-amber-400 text-night-950 font-bold ring-2 ring-amber-400/50'
                   : isFav
@@ -199,6 +265,9 @@ export function EventCalendar({ festivals }: { festivals: FestivalWithYears[] })
               }`}
             >
               {d.date()}
+              {hasSale && (
+                <span className="absolute bottom-0.5 left-1.5 right-1.5 h-[3px] bg-amber-400 rounded-full shadow-[0_0_4px_rgba(251,191,36,0.7)]" />
+              )}
             </button>
           )
         })}
@@ -212,7 +281,11 @@ export function EventCalendar({ festivals }: { festivals: FestivalWithYears[] })
         </span>
         <span className="inline-flex items-center gap-1">
           <span className="w-2 h-2 rounded-sm bg-red-500/50 border border-red-400/60"></span>
-          ♥ お気に入り
+          ♥
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <span className="w-3 h-[3px] rounded-full bg-amber-400"></span>
+          🎫 販売中
         </span>
         <span className="inline-flex items-center gap-1">
           <span className="w-2 h-2 rounded-sm ring-1 ring-emerald-400/80"></span>
@@ -223,6 +296,36 @@ export function EventCalendar({ festivals }: { festivals: FestivalWithYears[] })
           選択中
         </span>
       </div>
+
+      {/* お気に入り大会の販売スケジュール */}
+      {favLotteryRows.length > 0 && (
+        <div className="mt-3 pt-2 border-t border-white/10">
+          <p className="text-[10px] text-white/40 mb-1.5">♥ お気に入り大会の有料席</p>
+          <div className="flex flex-col gap-1">
+            {favLotteryRows.map((r, i) => (
+              <Link
+                key={i}
+                href={`/festivals/${r.festivalId}`}
+                className="flex items-center justify-between gap-2 text-[11px] hover:bg-white/5 rounded px-1 py-0.5 transition-colors"
+              >
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className={`text-[9px] font-bold shrink-0 ${
+                    r.state === 'open' ? 'text-emerald-400'
+                    : r.state === 'upcoming' ? 'text-amber-300'
+                    : 'text-white/35'
+                  }`}>
+                    {r.state === 'open' ? '受付中' : r.state === 'upcoming' ? '予定' : '終了'}
+                  </span>
+                  <span className={`truncate ${r.state === 'ended' ? 'text-white/30' : 'text-white/70'}`}>
+                    {r.festivalName}
+                  </span>
+                </div>
+                <span className={`shrink-0 text-[10px] ${r.state === 'ended' ? 'text-white/25' : 'text-white/40'}`}>{r.label}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
