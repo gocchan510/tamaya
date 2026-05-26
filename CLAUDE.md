@@ -217,3 +217,8 @@ curl -X POST 'https://api.supabase.com/v1/projects/{ref}/database/query' \
   - 受付中/予定/終了 を色分け
   - クリックで詳細ページ
 - 凡例にも 🎫 販売中 を追加
+
+### ソース17種運用（Phase 1〜5完了）
+- Walker+/じゃらん/るるぶ/ジョルダン/駅探/空花火/観光協会/ふるさとチョイス/ぴあ/イープラス/Hanabidia/Wikipedia/ローチケ/FANY/CNプレイガイド/煙火協会/4travel
+- DB: 333件（Phase 5完了後、3件廃止削除）
+- 削除済: 鶴見川サマー・草加市民納涼・サンセットページェント沼津（恒久廃止）

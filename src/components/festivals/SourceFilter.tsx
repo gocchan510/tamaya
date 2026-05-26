@@ -15,6 +15,11 @@ const SOURCES = [
   { key: 'eplus',      label: 'イープラス', cls: 'bg-lime-500/90 text-night-950 border-lime-500/90' },
   { key: 'hanabier',   label: 'Hanabier', cls: 'bg-teal-500/90 text-night-950 border-teal-500/90' },
   { key: 'wikipedia',  label: 'Wikipedia', cls: 'bg-slate-400/90 text-night-950 border-slate-400/90' },
+  { key: 'l_tike',     label: 'ローチケ',  cls: 'bg-blue-500/90 text-white border-blue-500/90' },
+  { key: 'fany',       label: 'FANY',     cls: 'bg-pink-500/90 text-white border-pink-500/90' },
+  { key: 'cn_play',    label: 'CNプレイ', cls: 'bg-emerald-600/90 text-white border-emerald-600/90' },
+  { key: 'enka_kyokai',label: '煙火協会', cls: 'bg-orange-600/90 text-white border-orange-600/90' },
+  { key: 'four_travel',label: '4travel',  cls: 'bg-amber-600/90 text-white border-amber-600/90' },
 ] as const
 
 export function SourceFilter() {

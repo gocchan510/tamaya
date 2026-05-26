@@ -69,6 +69,11 @@ const SOURCE_BADGES: Record<string, { label: string; cls: string }> = {
   eplus:      { label: 'eプ', cls: 'bg-lime-500/15 text-lime-300 border-lime-400/30' },
   hanabier:   { label: 'Hb',  cls: 'bg-teal-500/15 text-teal-300 border-teal-400/30' },
   wikipedia:  { label: 'Wp',  cls: 'bg-slate-400/15 text-slate-300 border-slate-400/30' },
+  l_tike:     { label: 'ロチ', cls: 'bg-blue-500/15 text-blue-300 border-blue-400/30' },
+  fany:       { label: 'FN',  cls: 'bg-pink-500/15 text-pink-300 border-pink-400/30' },
+  cn_play:    { label: 'CN',  cls: 'bg-emerald-600/15 text-emerald-300 border-emerald-600/30' },
+  enka_kyokai:{ label: '煙協', cls: 'bg-orange-600/15 text-orange-300 border-orange-600/30' },
+  four_travel:{ label: '4t',  cls: 'bg-amber-600/15 text-amber-300 border-amber-600/30' },
 }
 
 const SPARK_COLORS = [
