@@ -74,6 +74,21 @@ const SOURCE_BADGES: Record<string, { label: string; cls: string }> = {
   cn_play:    { label: 'CN',  cls: 'bg-emerald-600/15 text-emerald-300 border-emerald-600/30' },
   enka_kyokai:{ label: '煙協', cls: 'bg-orange-600/15 text-orange-300 border-orange-600/30' },
   four_travel:{ label: '4t',  cls: 'bg-amber-600/15 text-amber-300 border-amber-600/30' },
+  hanabi_cloud:{ label: '☁',  cls: 'bg-violet-400/15 text-violet-300 border-violet-400/30' },
+  asoview:    { label: 'aso', cls: 'bg-yellow-400/15 text-yellow-300 border-yellow-400/30' },
+  ikyu:       { label: '休',  cls: 'bg-zinc-300/15 text-zinc-300 border-zinc-300/30' },
+  local_news: { label: '紙',  cls: 'bg-stone-500/15 text-stone-300 border-stone-500/30' },
+  seven_ticket:    { label: '7t', cls: 'bg-orange-500/15 text-orange-300 border-orange-500/30' },
+  rakuten_ticket:  { label: '楽チ', cls: 'bg-red-700/15 text-red-300 border-red-700/30' },
+  rakuten_furusato:{ label: '楽ふ', cls: 'bg-rose-600/15 text-rose-300 border-rose-600/30' },
+  satofull:        { label: 'さと', cls: 'bg-sky-400/15 text-sky-300 border-sky-400/30' },
+  jtb_tour:        { label: 'JTB', cls: 'bg-red-400/15 text-red-300 border-red-400/30' },
+  his_tour:        { label: 'HIS', cls: 'bg-yellow-600/15 text-yellow-300 border-yellow-600/30' },
+  hankyu_tour:     { label: '阪急', cls: 'bg-amber-900/15 text-amber-400 border-amber-900/30' },
+  livepocket:      { label: 'LP',  cls: 'bg-purple-500/15 text-purple-300 border-purple-400/30' },
+  ticketrise:      { label: 'TR',  cls: 'bg-teal-600/15 text-teal-300 border-teal-600/30' },
+  jre_mall:        { label: 'JRE', cls: 'bg-green-600/15 text-green-300 border-green-600/30' },
+  univ_fest:       { label: '大', cls: 'bg-pink-400/15 text-pink-300 border-pink-400/30' },
 }
 
 const SPARK_COLORS = [

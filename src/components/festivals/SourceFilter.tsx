@@ -20,6 +20,21 @@ const SOURCES = [
   { key: 'cn_play',    label: 'CNプレイ', cls: 'bg-emerald-600/90 text-white border-emerald-600/90' },
   { key: 'enka_kyokai',label: '煙火協会', cls: 'bg-orange-600/90 text-white border-orange-600/90' },
   { key: 'four_travel',label: '4travel',  cls: 'bg-amber-600/90 text-white border-amber-600/90' },
+  { key: 'hanabi_cloud',label: '花火クラウド', cls: 'bg-violet-400/90 text-night-950 border-violet-400/90' },
+  { key: 'asoview',    label: 'asoview', cls: 'bg-yellow-400/90 text-night-950 border-yellow-400/90' },
+  { key: 'ikyu',       label: '一休',     cls: 'bg-zinc-300/90 text-night-950 border-zinc-300/90' },
+  { key: 'local_news', label: '地方紙',   cls: 'bg-stone-500/90 text-white border-stone-500/90' },
+  { key: 'seven_ticket',    label: 'セブン',  cls: 'bg-orange-500/90 text-night-950 border-orange-500/90' },
+  { key: 'rakuten_ticket',  label: '楽天チケ', cls: 'bg-red-700/90 text-white border-red-700/90' },
+  { key: 'rakuten_furusato',label: '楽天ふる', cls: 'bg-rose-600/90 text-white border-rose-600/90' },
+  { key: 'satofull',        label: 'さとふる', cls: 'bg-sky-400/90 text-night-950 border-sky-400/90' },
+  { key: 'jtb_tour',        label: 'JTB',     cls: 'bg-red-400/90 text-night-950 border-red-400/90' },
+  { key: 'his_tour',        label: 'HIS',     cls: 'bg-yellow-600/90 text-white border-yellow-600/90' },
+  { key: 'hankyu_tour',     label: '阪急',    cls: 'bg-amber-900/90 text-white border-amber-900/90' },
+  { key: 'livepocket',      label: 'livepocket', cls: 'bg-purple-500/90 text-white border-purple-500/90' },
+  { key: 'ticketrise',      label: 'TicketRise', cls: 'bg-teal-600/90 text-white border-teal-600/90' },
+  { key: 'jre_mall',        label: 'JRE',     cls: 'bg-green-600/90 text-white border-green-600/90' },
+  { key: 'univ_fest',       label: '大学祭',  cls: 'bg-pink-400/90 text-night-950 border-pink-400/90' },
 ] as const
 
 export function SourceFilter() {

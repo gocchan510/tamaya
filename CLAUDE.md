@@ -236,3 +236,8 @@ curl -X POST 'https://api.supabase.com/v1/projects/{ref}/database/query' \
   - 長南町大花火（千葉、1819年起源・二尺玉）
 - **sources=['kankou']** で一律タグ付け
 - DB: **415件** 達成
+
+### ソース最終展開（30超）
+- 追加: hanabi.cloud（リゾート・月例花火）、Asoview、一休（高級プラン）、地方紙8、セブン・楽天チケット、楽天ふるさと・さとふる、JTB・HIS・阪急ツアー、JRE MALL、大学祭、livepocket（空振り）
+- DB: **492件** 達成
+- 関東+静岡網羅性 9割超
