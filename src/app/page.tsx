@@ -12,6 +12,7 @@ import { SourceFilter } from '@/components/festivals/SourceFilter'
 import { PrefectureFilter } from '@/components/festivals/PrefectureFilter'
 import { TabSwitcher } from '@/components/festivals/TabSwitcher'
 import { DebugToggle } from '@/components/festivals/DebugToggle'
+import { ShareFavoritesButton, FavoritesImporter } from '@/components/festivals/ShareFavorites'
 import { SearchBox } from '@/components/festivals/SearchBox'
 import { FestivalList } from '@/components/festivals/FestivalList'
 import { EventCalendar } from '@/components/festivals/EventCalendar'
@@ -52,6 +53,12 @@ export default async function Home() {
 
         {/* タブ + ソート + フィルタ */}
         <div className="flex flex-col items-center gap-3 mb-8">
+          <Suspense>
+            <FavoritesImporter />
+          </Suspense>
+          <Suspense>
+            <ShareFavoritesButton />
+          </Suspense>
           <Suspense>
             <DebugToggle />
           </Suspense>

@@ -4,6 +4,7 @@ import dayjs from 'dayjs'
 import 'dayjs/locale/ja'
 import { FavoriteButton } from './FavoriteButton'
 import { UnfavButton } from './UnfavButton'
+import { OfficialLinkButton } from './OfficialLinkButton'
 
 dayjs.locale('ja')
 
@@ -144,19 +145,9 @@ export function FestivalCard({ festival, year, rank, rankLabel, referenceDate, f
   return (
     <Link href={`/festivals/${festival.id}`} className="block group">
       <article className="glass glass-hover rounded-2xl p-5 relative overflow-hidden">
-        {/* 右下: 公式URLリンク */}
+        {/* 右下: 公式URLリンク（外側が<a>なので、ネスト回避でbuttonにする） */}
         {festival.official_url && (
-          <a
-            href={festival.official_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={e => e.stopPropagation()}
-            className="absolute bottom-2.5 right-3 inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-amber-400/10 text-amber-300/90 border border-amber-400/20 hover:bg-amber-400/25 hover:text-amber-300 transition-colors z-10"
-            title="公式サイトを開く"
-          >
-            <span>🔗</span>
-            <span>公式</span>
-          </a>
+          <OfficialLinkButton url={festival.official_url} />
         )}
         {/* 左アクセントライン */}
         <div className={`absolute left-0 top-4 bottom-4 w-0.5 ${sparkColor} opacity-60 rounded-full`} />
