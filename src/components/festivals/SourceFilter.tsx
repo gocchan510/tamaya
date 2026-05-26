@@ -1,6 +1,6 @@
 'use client'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
-import { useTransition } from 'react'
+import { useState, useTransition } from 'react'
 
 const SOURCES = [
   { key: 'walkerplus', label: 'Walker+',  cls: 'bg-cyan-500/90 text-night-950 border-cyan-500/90' },
@@ -42,6 +42,7 @@ export function SourceFilter() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const [isPending, startTransition] = useTransition()
+  const [open, setOpen] = useState(false)
   const raw = searchParams.get('source') ?? ''
   const active = new Set(raw.split(',').filter(Boolean))
 
@@ -59,18 +60,29 @@ export function SourceFilter() {
   const baseBtn = 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-all duration-200 border whitespace-nowrap'
 
   return (
-    <div className="flex items-center gap-1.5 flex-wrap justify-center">
-      <span className="text-[10px] text-white/30 mr-1">ソース:</span>
-      {SOURCES.map(s => (
-        <button
-          key={s.key}
-          onClick={() => toggle(s.key)}
-          disabled={isPending}
-          className={`${baseBtn} ${active.has(s.key) ? s.cls : inactive}`}
-        >
-          {s.label}
-        </button>
-      ))}
+    <div className="flex flex-col items-center gap-1.5 w-full max-w-2xl">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="inline-flex items-center gap-1.5 text-[11px] text-white/40 hover:text-white/70 transition-colors"
+        aria-expanded={open}
+      >
+        <span>ソース{active.size > 0 ? ` (${active.size})` : ''}</span>
+        <span className="text-white/50">{open ? '▼' : '▶'}</span>
+      </button>
+      {open && (
+        <div className="flex items-center gap-1.5 flex-wrap justify-center">
+          {SOURCES.map(s => (
+            <button
+              key={s.key}
+              onClick={() => toggle(s.key)}
+              disabled={isPending}
+              className={`${baseBtn} ${active.has(s.key) ? s.cls : inactive}`}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

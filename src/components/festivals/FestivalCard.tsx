@@ -3,6 +3,7 @@ import type { Festival, FestivalYear, LotteryPeriod } from '@/types'
 import dayjs from 'dayjs'
 import 'dayjs/locale/ja'
 import { FavoriteButton } from './FavoriteButton'
+import { UnfavButton } from './UnfavButton'
 
 dayjs.locale('ja')
 
@@ -10,7 +11,17 @@ interface Props {
   festival: Festival
   year: FestivalYear | null
   rank: number
+  /** rank の代わりに表示する文字列（お気に入りタブの日付ラベル等） */
+  rankLabel?: string
+  /** 「N日後」計算用の基準日（YYYY-MM-DD）。未指定なら year.date を使う */
+  referenceDate?: string
+  /** お気に入りタブで、解除用の ♥ ボタンを出す対象日付一覧 */
+  favDates?: string[]
   lotteries?: LotteryPeriod[]
+  /** カレンダーで日付クリック時の絞り込み日（YYYY-MM-DD）。設定時のみ ♥ ボタンを表示 */
+  contextDate?: string | null
+  /** デバッグモード: ソースバッジ等を表示 */
+  debug?: boolean
 }
 
 type DisplayLottery = { lottery: LotteryPeriod; state: 'open' | 'upcoming' | 'ended' }
@@ -109,22 +120,74 @@ function formatCount(n: number): string {
   return n.toLocaleString()
 }
 
-export function FestivalCard({ festival, year, rank, lotteries = [] }: Props) {
-  const days = daysUntil(year?.date ?? null)
+export function FestivalCard({ festival, year, rank, rankLabel, referenceDate, favDates, lotteries = [], contextDate = null, debug = false }: Props) {
+  const days = daysUntil(referenceDate ?? year?.date ?? null)
   const sparkColor = SPARK_COLORS[rank % SPARK_COLORS.length]
   const displayLotteries = getDisplayLotteries(lotteries)
+
+  // contextDate がこの大会の開催日に含まれるかチェック
+  const eventDates: string[] = year?.event_dates && year.event_dates.length > 0
+    ? year.event_dates
+    : year?.date
+      ? year.end_date
+        ? (() => {
+            const arr: string[] = []
+            for (let d = new Date(year.date); d <= new Date(year.end_date); d.setDate(d.getDate() + 1)) {
+              arr.push(d.toISOString().slice(0, 10))
+            }
+            return arr
+          })()
+        : [year.date]
+      : []
+  const showFav = !!contextDate && eventDates.includes(contextDate)
 
   return (
     <Link href={`/festivals/${festival.id}`} className="block group">
       <article className="glass glass-hover rounded-2xl p-5 relative overflow-hidden">
+        {/* 右下: 公式URLリンク */}
+        {festival.official_url && (
+          <a
+            href={festival.official_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={e => e.stopPropagation()}
+            className="absolute bottom-2.5 right-3 inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-amber-400/10 text-amber-300/90 border border-amber-400/20 hover:bg-amber-400/25 hover:text-amber-300 transition-colors z-10"
+            title="公式サイトを開く"
+          >
+            <span>🔗</span>
+            <span>公式</span>
+          </a>
+        )}
         {/* 左アクセントライン */}
         <div className={`absolute left-0 top-4 bottom-4 w-0.5 ${sparkColor} opacity-60 rounded-full`} />
 
         <div className="flex items-start gap-4">
-          {/* ランク */}
-          <div className={`rank-badge text-2xl font-bold w-8 shrink-0 text-center leading-none mt-1 ${RANK_COLORS[rank] ?? 'text-white/40'}`}>
-            {rank}
-          </div>
+          {/* ランク or 日付ラベル */}
+          {rankLabel ? (
+            <div className="shrink-0 w-14 text-center mt-1 flex flex-col items-center gap-1.5">
+              <div>
+                <div className="text-base font-bold text-red-300 leading-none">{rankLabel}</div>
+                <div className="text-[9px] text-red-300/60 mt-0.5">お気に入り</div>
+              </div>
+              {festival.tier && TIER_BADGES[festival.tier] && (
+                <span className={`text-[13px] font-bold px-2 py-1 rounded border ${TIER_BADGES[festival.tier].cls}`}>
+                  {TIER_BADGES[festival.tier].label}
+                </span>
+              )}
+              {/* お気に入り解除ボタン群（確認ダイアログ付き） */}
+              {favDates && favDates.length > 0 && (
+                <div className="flex flex-col gap-1 w-full">
+                  {favDates.map(d => (
+                    <UnfavButton key={d} festivalId={festival.id} date={d} />
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className={`rank-badge text-2xl font-bold w-8 shrink-0 text-center leading-none mt-1 ${RANK_COLORS[rank] ?? 'text-white/40'}`}>
+              {rank}
+            </div>
+          )}
 
           {/* メイン情報 */}
           <div className="flex-1 min-w-0">
@@ -134,12 +197,12 @@ export function FestivalCard({ festival, year, rank, lotteries = [] }: Props) {
                   <p className="text-xs text-white/40">
                     {festival.prefecture} {festival.city}
                   </p>
-                  {festival.tier && TIER_BADGES[festival.tier] && (
+                  {!rankLabel && festival.tier && TIER_BADGES[festival.tier] && (
                     <span className={`text-[9px] px-1.5 py-px rounded border ${TIER_BADGES[festival.tier].cls}`}>
                       {TIER_BADGES[festival.tier].label}
                     </span>
                   )}
-                  {(festival.sources ?? []).map(src => SOURCE_BADGES[src] && (
+                  {debug && (festival.sources ?? []).map(src => SOURCE_BADGES[src] && (
                     <span key={src} className={`text-[9px] px-1.5 py-px rounded border ${SOURCE_BADGES[src].cls}`} title={src}>
                       {SOURCE_BADGES[src].label}
                     </span>
@@ -166,7 +229,9 @@ export function FestivalCard({ festival, year, rank, lotteries = [] }: Props) {
                     )}
                   </div>
                 )}
-                <FavoriteButton festivalId={festival.id} size="sm" />
+                {showFav && contextDate && (
+                  <FavoriteButton festivalId={festival.id} date={contextDate} size="sm" showLabel />
+                )}
               </div>
             </div>
 

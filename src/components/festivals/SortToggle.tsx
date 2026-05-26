@@ -3,8 +3,7 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { useTransition } from 'react'
 
 const SORTS = [
-  { key: 'ranking',    label: '人気順' },
-  { key: 'date',       label: '日程順' },
+  { key: 'ranking',    label: '規模順' },
   { key: 'fireworks',  label: '打上数' },
   { key: 'attendance', label: '来場者' },
   { key: 'shell',      label: '号数' },
@@ -18,10 +17,11 @@ export function SortToggle() {
   const current = searchParams.get('sort') ?? 'ranking'
 
   const set = (sort: string) => {
-    const params = new URLSearchParams(searchParams.toString())
-    params.set('sort', sort)
+    // ソートはDB全体のランキング前提 → 全フィルタを解除してデフォルトに戻す
+    const params = new URLSearchParams()
+    if (sort !== 'ranking') params.set('sort', sort)
     startTransition(() => {
-      router.push(`${pathname}?${params.toString()}`)
+      router.push(params.toString() ? `${pathname}?${params.toString()}` : pathname)
     })
   }
 

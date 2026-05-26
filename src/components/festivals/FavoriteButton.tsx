@@ -1,32 +1,44 @@
 'use client'
 import { useFavorites } from '@/hooks/useFavorites'
+import dayjs from 'dayjs'
 
-export function FavoriteButton({ festivalId, size = 'md' }: { festivalId: string; size?: 'sm' | 'md' }) {
+type Props = {
+  festivalId: string
+  date: string // YYYY-MM-DD
+  size?: 'xs' | 'sm' | 'md'
+  showLabel?: boolean // M/D ラベルを表示
+}
+
+export function FavoriteButton({ festivalId, date, size = 'md', showLabel = false }: Props) {
   const { isFav, toggle, loaded } = useFavorites()
-  const active = loaded && isFav(festivalId)
+  const active = loaded && isFav(festivalId, date)
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    toggle(festivalId)
+    toggle(festivalId, date)
   }
 
-  const sizeClasses = size === 'sm'
-    ? 'w-7 h-7 text-base'
-    : 'w-9 h-9 text-xl'
+  const sizeClasses =
+    size === 'xs' ? 'h-6 px-2 text-[11px]'
+    : size === 'sm' ? 'h-7 px-2.5 text-xs'
+    : 'h-9 px-3 text-sm'
+
+  const label = showLabel ? dayjs(date).format('M/D') : ''
 
   return (
     <button
       onClick={handleClick}
-      aria-label={active ? 'お気に入り解除' : 'お気に入り追加'}
-      className={`${sizeClasses} shrink-0 rounded-full flex items-center justify-center transition-all duration-200 ${
+      aria-label={active ? `${label || 'お気に入り'}を解除` : `${label || 'お気に入り'}を追加`}
+      className={`${sizeClasses} shrink-0 rounded-full inline-flex items-center gap-1 transition-all duration-200 ${
         active
-          ? 'bg-pink-500/20 text-pink-400 hover:bg-pink-500/30 hover:scale-110'
-          : 'bg-white/5 text-white/30 hover:bg-white/10 hover:text-white/60'
+          ? 'bg-pink-500/20 text-pink-300 border border-pink-400/40 hover:bg-pink-500/30'
+          : 'bg-white/5 text-white/40 border border-white/10 hover:bg-white/10 hover:text-white/70'
       }`}
       style={{ visibility: loaded ? 'visible' : 'hidden' }}
     >
-      {active ? '♥' : '♡'}
+      <span>{active ? '♥' : '♡'}</span>
+      {showLabel && <span className="font-medium">{label}</span>}
     </button>
   )
 }

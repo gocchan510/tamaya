@@ -3,6 +3,18 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { FavoriteButton } from '@/components/festivals/FavoriteButton'
 
+// 大会の全開催日（YYYY-MM-DD）を列挙
+function collectDates(year: { date: string | null; end_date: string | null; event_dates: string[] | null }): string[] {
+  if (year.event_dates && year.event_dates.length > 0) return year.event_dates
+  if (!year.date) return []
+  if (!year.end_date) return [year.date]
+  const arr: string[] = []
+  for (let d = new Date(year.date); d <= new Date(year.end_date); d.setDate(d.getDate() + 1)) {
+    arr.push(d.toISOString().slice(0, 10))
+  }
+  return arr
+}
+
 export const dynamic = 'force-dynamic'
 
 import { Stars } from '@/components/ui/Stars'
@@ -101,6 +113,7 @@ export default async function FestivalPage(props: { params: Promise<{ id: string
 
   const year = festival.festival_years?.[0]
   const lotteries = year?.lottery_periods ?? []
+  const allDates = year ? collectDates(year) : []
 
   const confirmedLotteries = lotteries.filter((l: { lottery_start_at: string | null }) => l.lottery_start_at !== null)
   const unknownLotteries = lotteries.filter((l: { lottery_start_at: string | null }) => l.lottery_start_at === null)
@@ -119,15 +132,12 @@ export default async function FestivalPage(props: { params: Promise<{ id: string
 
         {/* ヘッダー */}
         <div className="mb-8">
-          <div className="flex items-start justify-between gap-3 mb-3">
-            <div>
-              <p className="text-xs text-white/40 mb-1">{festival.prefecture} {festival.city}</p>
-              <h1 className="text-2xl font-bold text-white/90 leading-tight">{festival.name}</h1>
-              {festival.venue && (
-                <p className="text-xs text-white/50 mt-1">📍 {festival.venue}</p>
-              )}
-            </div>
-            <FavoriteButton festivalId={festival.id} />
+          <div className="mb-3">
+            <p className="text-xs text-white/40 mb-1">{festival.prefecture} {festival.city}</p>
+            <h1 className="text-2xl font-bold text-white/90 leading-tight">{festival.name}</h1>
+            {festival.venue && (
+              <p className="text-xs text-white/50 mt-1">📍 {festival.venue}</p>
+            )}
           </div>
 
           {year?.status === 'cancelled' ? (
@@ -135,32 +145,47 @@ export default async function FestivalPage(props: { params: Promise<{ id: string
               2026年 開催中止
             </span>
           ) : year?.event_dates && year.event_dates.length > 0 ? (
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-2">
               <span className="text-lg text-amber-300 font-semibold">
                 {year.event_dates.length}日間開催（{dayjs(year.event_dates[0]).format('YYYY年M月D日')} 〜）
               </span>
-              <div className="flex flex-wrap gap-1.5 mt-1">
+              <p className="text-[11px] text-white/40">♥ をタップでその日をお気に入り登録</p>
+              <div className="flex flex-wrap gap-1.5">
                 {(year.event_dates as string[]).map((d: string) => (
-                  <span key={d} className="text-xs px-2 py-0.5 rounded-md bg-amber-400/10 text-amber-300/90 border border-amber-400/20">
-                    {dayjs(d).format('M/D（dd）')}
-                  </span>
+                  <FavoriteButton key={d} festivalId={festival.id} date={d} size="sm" showLabel />
                 ))}
               </div>
             </div>
           ) : year?.date && (
-            <div className="flex items-center gap-2">
-              <span className="text-lg text-amber-300 font-semibold">
-                {dayjs(year.date).format('YYYY年M月D日（dd）')}
-                {year.end_date && (
-                  <span className="text-amber-300/70">
-                    {' 〜 '}{dayjs(year.end_date).format(dayjs(year.end_date).month() === dayjs(year.date).month() ? 'D日（dd）' : 'M月D日（dd）')}
-                  </span>
-                )}
-              </span>
-              {year.date_confirmed
-                ? <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">確定</span>
-                : <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/5 text-white/30 border border-white/10">推定</span>
-              }
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-lg text-amber-300 font-semibold">
+                  {dayjs(year.date).format('YYYY年M月D日（dd）')}
+                  {year.end_date && (
+                    <span className="text-amber-300/70">
+                      {' 〜 '}{dayjs(year.end_date).format(dayjs(year.end_date).month() === dayjs(year.date).month() ? 'D日（dd）' : 'M月D日（dd）')}
+                    </span>
+                  )}
+                </span>
+                {year.date_confirmed
+                  ? <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">確定</span>
+                  : <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/5 text-white/30 border border-white/10">推定</span>
+                }
+              </div>
+              {allDates.length > 1 ? (
+                <>
+                  <p className="text-[11px] text-white/40">♥ をタップでその日をお気に入り登録</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {allDates.map(d => (
+                      <FavoriteButton key={d} festivalId={festival.id} date={d} size="sm" showLabel />
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div>
+                  <FavoriteButton festivalId={festival.id} date={year.date} size="sm" showLabel />
+                </div>
+              )}
             </div>
           )}
           {year?.start_time && (

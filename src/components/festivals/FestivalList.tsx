@@ -46,12 +46,13 @@ function shellSizeNumeric(s: string | null | undefined): number {
 export function FestivalList({ festivals }: { festivals: FestivalWithYears[] }) {
   const searchParams = useSearchParams()
   const tab = searchParams.get('tab') ?? 'all'
-  const sort = searchParams.get('sort') ?? 'ranking'
+  // お気に入りタブはデフォルト日付順（お気に入りした日付の早い順）、それ以外は規模順
+  const sort = searchParams.get('sort') ?? (tab === 'favorites' ? 'date' : 'ranking')
   const filter = searchParams.get('filter')
   const month = searchParams.get('month')
   const from = searchParams.get('from')
   const to = searchParams.get('to')
-  const tierRaw = searchParams.get('tier') ?? 'xl,l'
+  const tierRaw = searchParams.get('tier') ?? 'xl,l,m,s,unverified'
   const tierSet = useMemo(() => new Set(tierRaw.split(',').filter(Boolean)), [tierRaw])
   const dstatusRaw = searchParams.get('dstatus') ?? 'confirmed,estimated,undetermined'
   const dstatusSet = useMemo(() => new Set(dstatusRaw.split(',').filter(Boolean)), [dstatusRaw])
@@ -60,24 +61,29 @@ export function FestivalList({ festivals }: { festivals: FestivalWithYears[] }) 
   const sourceSet = useMemo(() => new Set(sourceRaw.split(',').filter(Boolean)), [sourceRaw])
   const prefRaw = searchParams.get('pref') ?? ''
   const prefSet = useMemo(() => new Set(prefRaw.split(',').filter(Boolean)), [prefRaw])
-  const { ids, loaded } = useFavorites()
+  const { festivalIds, datesOf, loaded } = useFavorites()
+  const debug = searchParams.get('debug') === '1'
+  // from===to の場合、その日付をカードの ♥ コンテキストとして渡す
+  const contextDate = from && to && from === to ? from : null
 
   const list = useMemo(() => {
     let l = festivals
     if (tab === 'favorites') {
       if (!loaded) return [] // 初期描画でホタンチラ防止
-      l = l.filter(f => ids.has(f.id))
+      l = l.filter(f => festivalIds.has(f.id))
     } else {
       l = l.filter(f => tierSet.has(f.tier ?? 'unverified') || (!f.tier && tierSet.has('s')))
     }
-    // 日程ステータスフィルタ（終了込み）
-    const todayStr = new Date().toISOString().slice(0, 10)
-    l = l.filter(f => {
-      const y = f.festival_years?.[0]
-      if (!y || !y.date) return dstatusSet.has('undetermined')
-      if (isEnded(y, todayStr)) return dstatusSet.has('ended')
-      return y.date_confirmed ? dstatusSet.has('confirmed') : dstatusSet.has('estimated')
-    })
+    // 日程ステータスフィルタ（お気に入りタブでは無視: ユーザーが明示登録済みなので常に表示）
+    if (tab !== 'favorites') {
+      const todayStr = new Date().toISOString().slice(0, 10)
+      l = l.filter(f => {
+        const y = f.festival_years?.[0]
+        if (!y || !y.date) return dstatusSet.has('undetermined')
+        if (isEnded(y, todayStr)) return dstatusSet.has('ended')
+        return y.date_confirmed ? dstatusSet.has('confirmed') : dstatusSet.has('estimated')
+      })
+    }
     // 検索フィルタ（名前・県・市の部分一致）
     if (q) {
       l = l.filter(f =>
@@ -128,11 +134,15 @@ export function FestivalList({ festivals }: { festivals: FestivalWithYears[] }) 
       })
     }
     if (sort === 'date') {
-      l = [...l].sort((a, b) => {
-        const ya = a.festival_years?.[0]?.date ?? '9999'
-        const yb = b.festival_years?.[0]?.date ?? '9999'
-        return ya.localeCompare(yb)
-      })
+      // お気に入りタブの時はお気に入りした日付（最早日）でソート
+      const keyOf = (f: FestivalWithYears): string => {
+        if (tab === 'favorites') {
+          const ds = datesOf(f.id)
+          if (ds.length > 0) return ds[0]
+        }
+        return f.festival_years?.[0]?.date ?? '9999'
+      }
+      l = [...l].sort((a, b) => keyOf(a).localeCompare(keyOf(b)))
     } else if (sort === 'fireworks') {
       l = [...l].sort((a, b) => (b.festival_years?.[0]?.fireworks_count ?? 0) - (a.festival_years?.[0]?.fireworks_count ?? 0))
     } else if (sort === 'attendance') {
@@ -141,7 +151,7 @@ export function FestivalList({ festivals }: { festivals: FestivalWithYears[] }) 
       l = [...l].sort((a, b) => shellSizeNumeric(b.festival_years?.[0]?.max_shell_size) - shellSizeNumeric(a.festival_years?.[0]?.max_shell_size))
     }
     return l
-  }, [festivals, tab, sort, filter, month, from, to, tierSet, dstatusSet, q, sourceSet, prefSet, ids, loaded])
+  }, [festivals, tab, sort, filter, month, from, to, tierSet, dstatusSet, q, sourceSet, prefSet, festivalIds, datesOf, loaded])
 
   if (tab === 'favorites' && loaded && list.length === 0) {
     return (
@@ -185,13 +195,33 @@ export function FestivalList({ festivals }: { festivals: FestivalWithYears[] }) 
       {list.map((festival, i) => {
         const year = festival.festival_years?.[0] ?? null
         const lotteries = year?.lottery_periods ?? []
+        // お気に入りタブ: 最早の未来お気に入り日付（なければ最早日付）を左端に表示
+        let rankLabel: string | undefined
+        let referenceDate: string | undefined
+        let favDatesProp: string[] | undefined
+        if (tab === 'favorites') {
+          const ds = datesOf(festival.id)
+          if (ds.length > 0) {
+            const today = new Date().toISOString().slice(0, 10)
+            const upcoming = ds.find(d => d >= today) ?? ds[0]
+            referenceDate = upcoming
+            const d = new Date(upcoming)
+            rankLabel = `${d.getMonth() + 1}/${d.getDate()}`
+            favDatesProp = ds
+          }
+        }
         return (
           <FestivalCard
             key={festival.id}
             festival={festival}
             year={year}
             rank={i + 1}
+            rankLabel={rankLabel}
+            referenceDate={referenceDate}
+            favDates={favDatesProp}
             lotteries={lotteries}
+            contextDate={contextDate}
+            debug={debug}
           />
         )
       })}

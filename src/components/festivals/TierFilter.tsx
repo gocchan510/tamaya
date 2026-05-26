@@ -15,7 +15,7 @@ export function TierFilter() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const [isPending, startTransition] = useTransition()
-  const raw = searchParams.get('tier') ?? 'xl,l' // デフォルト XL+L
+  const raw = searchParams.get('tier') ?? 'xl,l,m,s,unverified' // デフォルト全選択
   const active = new Set(raw.split(',').filter(Boolean))
 
   const toggle = (key: string) => {
