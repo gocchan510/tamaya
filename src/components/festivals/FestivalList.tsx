@@ -1,7 +1,8 @@
 'use client'
 import { useSearchParams } from 'next/navigation'
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect, useRef } from 'react'
 import { FestivalCard } from './FestivalCard'
+import { ActiveFilters } from './ActiveFilters'
 import { useFavorites } from '@/hooks/useFavorites'
 import type { Festival, FestivalYear, LotteryPeriod } from '@/types'
 
@@ -61,6 +62,8 @@ export function FestivalList({ festivals }: { festivals: FestivalWithYears[] }) 
   const sourceSet = useMemo(() => new Set(sourceRaw.split(',').filter(Boolean)), [sourceRaw])
   const prefRaw = searchParams.get('pref') ?? ''
   const prefSet = useMemo(() => new Set(prefRaw.split(',').filter(Boolean)), [prefRaw])
+  const minFw = parseInt(searchParams.get('minfw') ?? '0', 10) || 0
+  const maxFw = parseInt(searchParams.get('maxfw') ?? '0', 10) || 0
   const { festivalIds, datesOf, loaded } = useFavorites()
   const debug = searchParams.get('debug') === '1'
   // from===to の場合、その日付をカードの ♥ コンテキストとして渡す
@@ -99,6 +102,16 @@ export function FestivalList({ festivals }: { festivals: FestivalWithYears[] }) 
     // 都道府県フィルタ
     if (prefSet.size > 0) {
       l = l.filter(f => prefSet.has(f.prefecture))
+    }
+    // 打上数フィルタ（帯型: min含む/max含まない。打上数不明は帯指定時は除外）
+    if (minFw > 0 || maxFw > 0) {
+      l = l.filter(f => {
+        const fc = f.festival_years?.[0]?.fireworks_count
+        if (fc == null) return false
+        if (minFw > 0 && fc < minFw) return false
+        if (maxFw > 0 && fc >= maxFw) return false
+        return true
+      })
     }
     if (month) {
       const m = parseInt(month, 10)
@@ -151,7 +164,25 @@ export function FestivalList({ festivals }: { festivals: FestivalWithYears[] }) 
       l = [...l].sort((a, b) => shellSizeNumeric(b.festival_years?.[0]?.max_shell_size) - shellSizeNumeric(a.festival_years?.[0]?.max_shell_size))
     }
     return l
-  }, [festivals, tab, sort, filter, month, from, to, tierSet, dstatusSet, q, sourceSet, prefSet, festivalIds, datesOf, loaded])
+  }, [festivals, tab, sort, filter, month, from, to, tierSet, dstatusSet, q, sourceSet, prefSet, minFw, maxFw, festivalIds, datesOf, loaded])
+
+  // 段階表示: 初期 PAGE 件だけ描画し、末尾到達で追加（全件DOM mount を回避）
+  const PAGE = 40
+  const [visible, setVisible] = useState(PAGE)
+  // フィルタ/ソート変更でリストが変わったら先頭に戻す
+  useEffect(() => { setVisible(PAGE) }, [list])
+  const sentinelRef = useRef<HTMLDivElement | null>(null)
+  useEffect(() => {
+    const el = sentinelRef.current
+    if (!el) return
+    const io = new IntersectionObserver(
+      entries => { if (entries[0].isIntersecting) setVisible(v => Math.min(v + PAGE, list.length)) },
+      { rootMargin: '600px' }
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [list.length])
+  const shown = list.slice(0, visible)
 
   if (tab === 'favorites' && loaded && list.length === 0) {
     return (
@@ -192,7 +223,12 @@ export function FestivalList({ festivals }: { festivals: FestivalWithYears[] }) 
 
   return (
     <div className="flex flex-col gap-3">
-      {list.map((festival, i) => {
+      {/* アクティブフィルタチップ + 該当件数 */}
+      <ActiveFilters />
+      <p className="text-xs text-white/40 -mt-1 mb-1">
+        該当 <span className="text-white/70 font-semibold">{list.length}</span> 件
+      </p>
+      {shown.map((festival, i) => {
         const year = festival.festival_years?.[0] ?? null
         const lotteries = year?.lottery_periods ?? []
         // お気に入りタブ: 最早の未来お気に入り日付（なければ最早日付）を左端に表示
@@ -225,6 +261,12 @@ export function FestivalList({ festivals }: { festivals: FestivalWithYears[] }) 
           />
         )
       })}
+      {/* 末尾センチネル: 交差で次の PAGE 件を追加 */}
+      {visible < list.length && (
+        <div ref={sentinelRef} className="py-6 text-center text-white/30 text-xs">
+          読み込み中… <span className="text-white/20">({visible} / {list.length})</span>
+        </div>
+      )}
     </div>
   )
 }

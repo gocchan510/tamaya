@@ -60,12 +60,19 @@ type MonthGridProps = {
 function MonthGrid({ view, eventMap, favDateSet, favSaleSet, favFestivalsByDate, favSalesByDate, from, to, onPickDate, isPending, compact = false }: MonthGridProps) {
   const startOfMonth = view.startOf('month')
   const gridStart = startOfMonth.startOf('week')
+  // 第6週(36日目)の最初の日が翌月なら 5週(35日)、そうでなければ 6週(42日)
+  const needsSixthWeek = gridStart.add(35, 'day').month() === view.month()
+  const totalDays = needsSixthWeek ? 42 : 35
   const days: dayjs.Dayjs[] = []
-  for (let i = 0; i < 42; i++) days.push(gridStart.add(i, 'day'))
+  for (let i = 0; i < totalDays; i++) days.push(gridStart.add(i, 'day'))
 
+  // from/to の範囲内なら選択扱い（クイックチップの土〜日や任意期間もハイライト）
   const isSelected = (d: dayjs.Dayjs) => {
     const s = d.format('YYYY-MM-DD')
-    return from === s && to === s
+    if (from && to) return s >= from && s <= to
+    if (from) return s === from
+    if (to) return s === to
+    return false
   }
 
   return (
@@ -91,8 +98,10 @@ function MonthGrid({ view, eventMap, favDateSet, favSaleSet, favFestivalsByDate,
       {/* 日付グリッド */}
       <div className={`grid grid-cols-7 ${compact ? 'gap-0.5' : 'gap-1'}`}>
         {days.map((d, i) => {
-          const ymd = d.format('YYYY-MM-DD')
           const isCurMonth = d.month() === view.month()
+          // 当月以外の日は空セルにする
+          if (!isCurMonth) return <div key={i} className="aspect-square" />
+          const ymd = d.format('YYYY-MM-DD')
           const hasEvent = !!eventMap[ymd]
           const isFav = favDateSet.has(ymd)
           const hasSale = favSaleSet.has(ymd)
@@ -204,6 +213,7 @@ export function EventCalendar({ festivals }: { festivals: FestivalWithYears[] })
   const q = (searchParams.get('q') ?? '').trim().toLowerCase()
   const prefRaw = searchParams.get('pref') ?? ''
   const prefSet = useMemo(() => new Set(prefRaw.split(',').filter(Boolean)), [prefRaw])
+  const minFw = parseInt(searchParams.get('minfw') ?? '0', 10) || 0
 
   const filteredFestivals = useMemo(() => {
     let l = festivals
@@ -238,8 +248,11 @@ export function EventCalendar({ festivals }: { festivals: FestivalWithYears[] })
     if (prefSet.size > 0) {
       l = l.filter(f => prefSet.has(f.prefecture))
     }
+    if (minFw > 0) {
+      l = l.filter(f => (f.festival_years?.[0]?.fireworks_count ?? 0) >= minFw)
+    }
     return l
-  }, [festivals, tab, tierSet, dstatusSet, q, prefSet, favIds, loaded])
+  }, [festivals, tab, tierSet, dstatusSet, q, prefSet, minFw, favIds, loaded])
 
   // 大会IDで引ける Map（古い fav エントリ判定にも使う）
   const festivalById = useMemo(() => new Map(festivals.map(f => [f.id, f])), [festivals])

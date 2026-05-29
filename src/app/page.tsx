@@ -7,10 +7,13 @@ import { SortToggle } from '@/components/festivals/SortToggle'
 import { FilterToggle } from '@/components/festivals/FilterToggle'
 import { MonthFilter } from '@/components/festivals/MonthFilter'
 import { TierFilter } from '@/components/festivals/TierFilter'
+import { FireworksFilter } from '@/components/festivals/FireworksFilter'
 import { DateStatusFilter } from '@/components/festivals/DateStatusFilter'
 import { SourceFilter } from '@/components/festivals/SourceFilter'
 import { PrefectureFilter } from '@/components/festivals/PrefectureFilter'
 import { TabSwitcher } from '@/components/festivals/TabSwitcher'
+import { FilterDisclosure } from '@/components/festivals/FilterDisclosure'
+import { QuickFilters } from '@/components/festivals/QuickFilters'
 import { DebugToggle } from '@/components/festivals/DebugToggle'
 import { ShareFavoritesButton, FavoritesImporter } from '@/components/festivals/ShareFavorites'
 import { SearchBox } from '@/components/festivals/SearchBox'
@@ -24,12 +27,35 @@ type FestivalWithYears = Festival & { festival_years: (FestivalYear & { lottery_
 export default async function Home() {
   const supabase = await createClient()
 
-  const { data: festivals } = await supabase
-    .from('festivals')
-    .select('*, festival_years(*, lottery_periods(*))')
-    .order('ranking_score', { ascending: false })
+  // PostgREST のサーバー max-rows が1000のため range で複数回取得
+  async function fetchAllFestivals() {
+    const all: FestivalWithYears[] = []
+    const pageSize = 1000
+    for (let from = 0; ; from += pageSize) {
+      const { data, error } = await supabase
+        .from('festivals')
+        // カード/リスト/カレンダー/検索で実際に使う列だけに絞る（description等の重い未使用列を送らない）
+        .select(`
+          id, name, prefecture, city, official_url, tier, sources,
+          festival_years(
+            id, date, end_date, event_dates, start_time, end_time,
+            max_shell_size, status, fireworks_count, expected_attendance,
+            date_confirmed, paid_seats_status,
+            lottery_periods(id, seat_name, lottery_start_at, lottery_end_at)
+          )
+        `)
+        .order('ranking_score', { ascending: false })
+        .range(from, from + pageSize - 1)
+      if (error) throw error
+      const chunk = (data ?? []) as FestivalWithYears[]
+      all.push(...chunk)
+      if (chunk.length < pageSize) break
+    }
+    return all
+  }
+  const festivals = await fetchAllFestivals()
 
-  const all = (festivals ?? []) as FestivalWithYears[]
+  const all = festivals
 
   // 都道府県の一覧（重複排除）
   const availablePrefectures = Array.from(new Set(all.map(f => f.prefecture))).sort()
@@ -69,28 +95,25 @@ export default async function Home() {
             <SearchBox candidates={all.map(f => ({ id: f.id, name: f.name, prefecture: f.prefecture, city: f.city, tier: f.tier }))} />
           </Suspense>
           <Suspense>
+            <QuickFilters />
+          </Suspense>
+          <Suspense>
             <SortToggle />
-          </Suspense>
-          <Suspense>
-            <PrefectureFilter available={availablePrefectures} />
-          </Suspense>
-          <Suspense>
-            <TierFilter />
-          </Suspense>
-          <Suspense>
-            <DateStatusFilter />
-          </Suspense>
-          <Suspense>
-            <SourceFilter />
-          </Suspense>
-          <Suspense>
-            <MonthFilter />
           </Suspense>
           <Suspense>
             <EventCalendar festivals={all} />
           </Suspense>
+          {/* 詳細フィルタは折りたたみに格納（デフォルト閉じ・アクティブ数バッジ付き） */}
           <Suspense>
-            <FilterToggle />
+            <FilterDisclosure>
+              <PrefectureFilter available={availablePrefectures} />
+              <TierFilter />
+              <FireworksFilter />
+              <DateStatusFilter />
+              <SourceFilter />
+              <MonthFilter />
+              <FilterToggle />
+            </FilterDisclosure>
           </Suspense>
         </div>
 
