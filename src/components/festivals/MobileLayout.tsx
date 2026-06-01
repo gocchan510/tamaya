@@ -7,6 +7,7 @@ import { SearchBox } from './SearchBox'
 import { SortToggle } from './SortToggle'
 import { QuickFilters } from './QuickFilters'
 import { HomeBaseSettings } from './HomeBaseSettings'
+import { NearbyButton } from './NearbyButton'
 import { FilterDisclosure } from './FilterDisclosure'
 import { PrefectureFilter } from './PrefectureFilter'
 import { TierFilter } from './TierFilter'
@@ -72,6 +73,7 @@ function Inner({
     <>
       {/* モバイル上部コントロール（検索・クイックフィルタ・ソート・拠点・フィルタ） */}
       <div className="lg:hidden flex flex-col gap-2 mb-4">
+        <Suspense><NearbyButton /></Suspense>
         <Suspense><SearchBox candidates={candidates} /></Suspense>
         <Suspense><QuickFilters /></Suspense>
         <Suspense><SortToggle /></Suspense>
