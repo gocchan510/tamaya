@@ -1,4 +1,4 @@
-const VERSION = 'tamaya-v1'
+const VERSION = 'tamaya-v2'
 const RUNTIME_CACHE = `${VERSION}-runtime`
 const PAGE_CACHE = `${VERSION}-pages`
 
@@ -28,19 +28,20 @@ self.addEventListener('fetch', (event) => {
   // Don't cache Next.js RSC/data or API routes
   if (url.pathname.startsWith('/api/') || url.searchParams.has('_rsc')) return
 
-  // HTML navigations: stale-while-revalidate for /, /festivals/[id]
+  // HTML navigations: network-first（最新HTMLを優先。古いHTMLがデプロイ後に
+  // 消えたJSチャンクを参照して落ちるのを防ぐ。オフライン時のみキャッシュにフォールバック）
   if (req.mode === 'navigate') {
     event.respondWith(
       (async () => {
         const cache = await caches.open(PAGE_CACHE)
-        const cached = await cache.match(req)
-        const network = fetch(req)
-          .then((res) => {
-            if (res.ok) cache.put(req, res.clone())
-            return res
-          })
-          .catch(() => cached)
-        return cached || network
+        try {
+          const res = await fetch(req)
+          if (res.ok) cache.put(req, res.clone())
+          return res
+        } catch {
+          const cached = await cache.match(req)
+          return cached || Response.error()
+        }
       })()
     )
     return
