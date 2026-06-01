@@ -3,7 +3,6 @@ import { useEffect } from 'react'
 import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet'
 import Link from 'next/link'
 import type { Festival, FestivalYear, LotteryPeriod } from '@/types'
-import 'leaflet/dist/leaflet.css'
 
 type FestivalWithYears = Festival & { festival_years: (FestivalYear & { lottery_periods: LotteryPeriod[] })[] }
 
