@@ -24,6 +24,7 @@ import { HomeBaseSettings } from '@/components/festivals/HomeBaseSettings'
 import { NearbyButton } from '@/components/festivals/NearbyButton'
 import { UpdateBanner } from '@/components/festivals/UpdateBanner'
 import { MobileLayout } from '@/components/festivals/MobileLayout'
+import { DesktopMapToggle } from '@/components/festivals/DesktopMapToggle'
 import { LATEST } from '@/lib/changelog'
 import { Stars } from '@/components/ui/Stars'
 import type { Festival, FestivalYear, LotteryPeriod } from '@/types'
@@ -123,11 +124,13 @@ export default async function Home() {
             </Suspense>
           </aside>
 
-          {/* 右: 一覧（PC・モバイル共通） */}
+          {/* 右: 一覧 or マップ（PC） / 一覧のみ（モバイルはタブバーからマップ） */}
           <main className="min-w-0">
-            <Suspense>
-              <FestivalList festivals={all} />
-            </Suspense>
+            <DesktopMapToggle festivals={all}>
+              <Suspense>
+                <FestivalList festivals={all} />
+              </Suspense>
+            </DesktopMapToggle>
           </main>
         </div>
 
