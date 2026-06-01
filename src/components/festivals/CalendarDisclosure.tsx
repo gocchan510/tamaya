@@ -28,12 +28,12 @@ export function CalendarDisclosure({ children }: { children: React.ReactNode }) 
 
   return (
     <>
-      {/* 右下フローティングボタン（常時表示） */}
+      {/* 右下フローティングボタン（PCのみ表示 / モバイルはタブバーのカレンダータブを使用） */}
       <button
         onClick={() => setOpen(o => !o)}
         aria-expanded={open}
         aria-label="カレンダーで探す"
-        className={`fixed bottom-5 right-5 z-40 inline-flex items-center gap-2 px-4 py-3 rounded-full text-sm font-medium shadow-2xl border backdrop-blur-md transition-all duration-200 ${
+        className={`hidden lg:inline-flex fixed bottom-5 right-5 z-40 items-center gap-2 px-4 py-3 rounded-full text-sm font-medium shadow-2xl border backdrop-blur-md transition-all duration-200 ${
           hasDate
             ? 'bg-sky-500/90 text-white border-sky-300/50'
             : 'bg-night-950/90 text-amber-200 border-amber-400/40 hover:bg-night-900/90 hover:border-amber-400/60'

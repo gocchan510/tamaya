@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 
 type Suggestion = { id: string; name: string; prefecture: string; city: string; tier: string | null }
 
-export function SearchBox({ candidates }: { candidates: Suggestion[] }) {
+export function SearchBox({ candidates, autoFocus }: { candidates: Suggestion[]; autoFocus?: boolean }) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -77,6 +77,7 @@ export function SearchBox({ candidates }: { candidates: Suggestion[] }) {
         placeholder="大会名・地名で検索"
         className="w-full bg-white/5 border border-white/10 rounded-full pl-9 pr-8 py-2 text-sm text-white/90 placeholder:text-white/30 focus:outline-none focus:border-amber-400/40 focus:bg-white/[0.07] transition-colors"
         autoComplete="off"
+        autoFocus={autoFocus}
       />
       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-sm pointer-events-none">🔍</span>
       {value && (
