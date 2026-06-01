@@ -21,6 +21,8 @@ import { SearchBox } from '@/components/festivals/SearchBox'
 import { FestivalList } from '@/components/festivals/FestivalList'
 import { EventCalendar } from '@/components/festivals/EventCalendar'
 import { HomeBaseSettings } from '@/components/festivals/HomeBaseSettings'
+import { UpdateBanner } from '@/components/festivals/UpdateBanner'
+import { LATEST } from '@/lib/changelog'
 import { Stars } from '@/components/ui/Stars'
 import type { Festival, FestivalYear, LotteryPeriod } from '@/types'
 
@@ -77,6 +79,13 @@ export default async function Home() {
           <p className="text-white/40 text-sm mt-4">
             全国主要{all.length}大会の日程・抽選・天気を一覧
           </p>
+          <Suspense>
+            <UpdateBanner
+              date={LATEST.date}
+              text={LATEST.text}
+              sha={process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7)}
+            />
+          </Suspense>
         </header>
 
         {/* PC: 左サイドバー(操作系) + 右メイン(一覧) の2ペイン / モバイル: 縦積み */}
