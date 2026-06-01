@@ -6,7 +6,7 @@ const TABS = [
   { key: 'list',      icon: '🎇', label: '一覧' },
   { key: 'calendar',  icon: '📅', label: 'カレンダー' },
   { key: 'favorites', icon: '❤️', label: 'お気に入り' },
-  { key: 'search',    icon: '🔍', label: '検索' },
+  { key: 'map',       icon: '🗺️', label: 'マップ' },
 ] as const
 
 type TabKey = typeof TABS[number]['key']
@@ -20,7 +20,7 @@ function Inner({
 }: {
   activeTab: TabKey
   onCalendar: () => void
-  onSearch: () => void
+  onMap: () => void
   onList: () => void
   onFavorites: () => void
 }) {
@@ -28,7 +28,7 @@ function Inner({
 
   const handle = (key: TabKey) => {
     if (key === 'calendar')  return onCalendar()
-    if (key === 'search')    return onSearch()
+    if (key === 'map')       return onMap()
     if (key === 'favorites') return onFavorites()
     return onList()
   }
@@ -70,7 +70,7 @@ function Inner({
 export function MobileTabBar(props: {
   activeTab: TabKey
   onCalendar: () => void
-  onSearch: () => void
+  onMap: () => void
   onList: () => void
   onFavorites: () => void
 }) {
