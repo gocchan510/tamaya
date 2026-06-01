@@ -12,10 +12,11 @@ export function HomeBaseSettings() {
     setLoading(true)
     setError(null)
     try {
+      // User-Agent はブラウザでは設定不可（禁止ヘッダー）。言語は accept-language クエリで指定する。
       const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + ' 日本')}&format=json&limit=1&countrycodes=jp`,
-        { headers: { 'Accept-Language': 'ja', 'User-Agent': 'tamaya-fireworks-guide' } }
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + ' 日本')}&format=json&limit=1&countrycodes=jp&accept-language=ja`
       )
+      if (!res.ok) { setError('検索に失敗しました'); return }
       const data = await res.json()
       if (!data.length) { setError('場所が見つかりませんでした'); return }
       const label = (data[0].display_name as string).split('、')[0].split(',')[0]
