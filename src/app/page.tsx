@@ -21,6 +21,7 @@ import { SearchBox } from '@/components/festivals/SearchBox'
 import { FestivalList } from '@/components/festivals/FestivalList'
 import { EventCalendar } from '@/components/festivals/EventCalendar'
 import { HomeBaseSettings } from '@/components/festivals/HomeBaseSettings'
+import { NearbyButton } from '@/components/festivals/NearbyButton'
 import { UpdateBanner } from '@/components/festivals/UpdateBanner'
 import { MobileLayout } from '@/components/festivals/MobileLayout'
 import { LATEST } from '@/lib/changelog'
@@ -108,6 +109,7 @@ export default async function Home() {
             <Suspense><QuickFilters /></Suspense>
             <Suspense><SortToggle /></Suspense>
             <HomeBaseSettings />
+            <Suspense><NearbyButton /></Suspense>
             <Suspense>
               <FilterDisclosure>
                 <PrefectureFilter available={availablePrefectures} />
