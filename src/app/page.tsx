@@ -20,6 +20,7 @@ import { ShareFavoritesButton, FavoritesImporter } from '@/components/festivals/
 import { SearchBox } from '@/components/festivals/SearchBox'
 import { FestivalList } from '@/components/festivals/FestivalList'
 import { EventCalendar } from '@/components/festivals/EventCalendar'
+import { HomeBaseSettings } from '@/components/festivals/HomeBaseSettings'
 import { Stars } from '@/components/ui/Stars'
 import type { Festival, FestivalYear, LotteryPeriod } from '@/types'
 
@@ -37,7 +38,7 @@ export default async function Home() {
         .from('festivals')
         // カード/リスト/カレンダー/検索で実際に使う列だけに絞る（description等の重い未使用列を送らない）
         .select(`
-          id, name, prefecture, city, official_url, tier, sources,
+          id, name, prefecture, city, lat, lng, official_url, tier, sources,
           festival_years(
             id, date, end_date, event_dates, start_time, end_time,
             max_shell_size, status, fireworks_count, expected_attendance,
@@ -103,6 +104,7 @@ export default async function Home() {
             <Suspense>
               <SortToggle />
             </Suspense>
+            <HomeBaseSettings />
             {/* 詳細フィルタは折りたたみに格納（デフォルト閉じ・アクティブ数バッジ付き） */}
             <Suspense>
               <FilterDisclosure>
