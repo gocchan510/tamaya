@@ -134,7 +134,7 @@ function MonthGrid({ view, eventMap, favDateSet, favSaleSet, favFestivalsByDate,
             >
               {d.date()}
               {hasSale && (
-                <span className={`absolute ${compact ? 'bottom-0 left-1 right-1 h-[2px]' : 'bottom-0.5 left-1.5 right-1.5 h-[3px]'} bg-amber-400 rounded-full shadow-[0_0_4px_rgba(251,191,36,0.7)]`} />
+                <span className={`absolute ${compact ? 'bottom-0 left-1 right-1 h-[2px]' : 'bottom-0.5 left-1.5 right-1.5 h-[2px]'} bg-amber-400/45 rounded-full`} />
               )}
             </button>
             {/* ホバーポップアップ: 上にお気に入り大会 / 下に有料席販売 */}
@@ -415,7 +415,7 @@ export function EventCalendar({ festivals }: { festivals: FestivalWithYears[] })
       </span>
       <span className="inline-flex items-center gap-1">
         <span className="w-2 h-2 rounded-sm bg-red-500/50 border border-red-400/60"></span>
-        ♥
+        お気に入り
       </span>
       <span className="inline-flex items-center gap-1">
         <span className="w-3 h-[3px] rounded-full bg-amber-400"></span>
@@ -439,7 +439,7 @@ export function EventCalendar({ festivals }: { festivals: FestivalWithYears[] })
         className="w-full flex items-center justify-between text-[10px] text-white/40 hover:text-white/70 transition-colors mb-1.5 py-0.5"
         aria-expanded={favListOpen}
       >
-        <span>♥ お気に入り大会の有料席 ({favLotteryRows.length})</span>
+        <span>❤️ お気に入り大会の有料席 ({favLotteryRows.length})</span>
         <span className="text-white/50">{favListOpen ? '▼' : '▶'}</span>
       </button>
       {favListOpen && (

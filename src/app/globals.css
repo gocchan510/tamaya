@@ -34,23 +34,60 @@ body {
   min-height: 100dvh;
 }
 
+/* オーロラ背景: ゆっくり漂う柔らかい光のブロブ（A+B ハイブリッドの華やかさ） */
 body::before {
   content: '';
   position: fixed;
-  inset: 0;
+  inset: -20%;
   background:
-    radial-gradient(ellipse at 20% 50%, rgba(99, 60, 180, 0.06) 0%, transparent 60%),
-    radial-gradient(ellipse at 80% 20%, rgba(251, 146, 60, 0.04) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 100%, rgba(103, 232, 249, 0.03) 0%, transparent 50%);
+    radial-gradient(42% 38% at 16% 24%, rgba(124, 92, 255, 0.28) 0%, transparent 68%),
+    radial-gradient(46% 42% at 84% 14%, rgba(251, 146, 60, 0.20) 0%, transparent 68%),
+    radial-gradient(52% 48% at 72% 88%, rgba(103, 232, 249, 0.16) 0%, transparent 68%),
+    radial-gradient(44% 44% at 26% 92%, rgba(244, 114, 182, 0.16) 0%, transparent 68%);
   pointer-events: none;
   z-index: 0;
+  filter: blur(48px);
+  animation: aurora-drift 22s ease-in-out infinite alternate;
 }
 
+@keyframes aurora-drift {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  50%  { transform: translate3d(2%, -2%, 0) scale(1.08); }
+  100% { transform: translate3d(-2%, 2%, 0) scale(1.04); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before { animation: none; }
+}
+
+/* レガシー: 既存の .glass を refined frosted に格上げ */
 .glass {
-  background: rgba(255, 255, 255, 0.035);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.02));
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* モダンなカード: フロストガラス + 奥行き(elevation) + 上端ハイライト */
+.glass-card {
+  position: relative;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.018));
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+}
+.glass-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(251, 191, 36, 0.28);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.025));
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(251, 191, 36, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.09);
 }
 
 .glass-hover {
@@ -63,11 +100,57 @@ body::before {
   box-shadow: 0 8px 32px rgba(251, 146, 60, 0.08);
 }
 
+/* グローは控えめに（Refined Dark: ネオン感を抑える） */
 .glow-gold {
-  text-shadow: 0 0 20px rgba(251, 191, 36, 0.5), 0 0 40px rgba(251, 191, 36, 0.2);
+  text-shadow: 0 0 24px rgba(251, 191, 36, 0.35);
 }
 .glow-ember {
   text-shadow: 0 0 16px rgba(251, 146, 60, 0.6);
+}
+
+/* オーロラ・グラデのテキスト（金→ピンク→紫） */
+.text-aurora {
+  background: linear-gradient(115deg, #fde68a 0%, #fbbf24 30%, #f472b6 65%, #a78bfa 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* セクション区切りのヘアライン */
+.hairline {
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.10), transparent);
+}
+
+/* モダンなフィルタピル基底 */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 9999px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid transparent;
+  transition: all 0.18s ease;
+  cursor: pointer;
+}
+.pill:hover {
+  color: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.09);
+}
+.pill-active {
+  color: #1a1208;
+  background: linear-gradient(135deg, #fde68a 0%, #fbbf24 100%);
+  border-color: rgba(251, 191, 36, 0.5);
+  box-shadow: 0 2px 12px rgba(251, 191, 36, 0.25);
+}
+.pill-active:hover {
+  color: #1a1208;
+  background: linear-gradient(135deg, #fef0b0 0%, #fcc63a 100%);
 }
 
 ::-webkit-scrollbar { width: 4px; }

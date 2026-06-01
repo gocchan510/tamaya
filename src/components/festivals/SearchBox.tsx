@@ -74,7 +74,7 @@ export function SearchBox({ candidates }: { candidates: Suggestion[] }) {
         onChange={e => { setValue(e.target.value); setOpen(true); setFocusIdx(-1) }}
         onFocus={() => setOpen(true)}
         onKeyDown={onKey}
-        placeholder=""
+        placeholder="大会名・地名で検索"
         className="w-full bg-white/5 border border-white/10 rounded-full pl-9 pr-8 py-2 text-sm text-white/90 placeholder:text-white/30 focus:outline-none focus:border-amber-400/40 focus:bg-white/[0.07] transition-colors"
         autoComplete="off"
       />

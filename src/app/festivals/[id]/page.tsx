@@ -2,6 +2,8 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { FavoriteButton } from '@/components/festivals/FavoriteButton'
+import { AddToCalendar } from '@/components/festivals/AddToCalendar'
+import { fetchForecast } from '@/lib/weather'
 
 // 大会の全開催日（YYYY-MM-DD）を列挙
 function collectDates(year: { date: string | null; end_date: string | null; event_dates: string[] | null }): string[] {
@@ -41,10 +43,10 @@ function LotteryRow({ label, start, end, url, confirmed }: {
   const isOpen = !!start && !isUpcoming && !isEnded
 
   return (
-    <div className={`glass rounded-xl p-4 border transition-colors ${
-      isOpen ? 'border-emerald-500/30 bg-emerald-500/5'
-      : isEnded ? 'border-transparent opacity-50'
-      : 'border-transparent'
+    <div className={`glass-card rounded-xl p-4 transition-colors ${
+      isOpen ? '!border-emerald-500/30 bg-emerald-500/5'
+      : isEnded ? 'opacity-50'
+      : ''
     }`}>
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
@@ -99,6 +101,31 @@ function LotteryRow({ label, start, end, url, confirmed }: {
   )
 }
 
+export async function generateMetadata(props: { params: Promise<{ id: string }> }) {
+  const { id } = await props.params
+  const supabase = await createClient()
+  const { data: f } = await supabase
+    .from('festivals')
+    .select('name, prefecture, city, festival_years(date, event_dates, fireworks_count)')
+    .eq('id', id)
+    .single()
+  if (!f) return { title: '大会が見つかりません — たまや' }
+  const y = f.festival_years?.[0]
+  const firstDate: string | null = y?.event_dates?.[0] ?? y?.date ?? null
+  const dateStr = firstDate ? dayjs(firstDate).format('YYYY年M月D日') : '日程未定'
+  const countStr = y?.fireworks_count
+    ? (y.fireworks_count >= 10000 ? ` / 約${(y.fireworks_count / 10000).toFixed(0)}万発` : ` / 約${y.fireworks_count.toLocaleString()}発`)
+    : ''
+  const title = `${f.name} — たまや`
+  const description = `${f.prefecture}${f.city} / ${dateStr}${countStr}。日程・有料席・天気をチェック`
+  return {
+    title,
+    description,
+    openGraph: { title, description, type: 'article' as const },
+    twitter: { card: 'summary_large_image' as const, title, description },
+  }
+}
+
 export default async function FestivalPage(props: { params: Promise<{ id: string }> }) {
   const { id } = await props.params
   const supabase = await createClient()
@@ -118,6 +145,11 @@ export default async function FestivalPage(props: { params: Promise<{ id: string
   const confirmedLotteries = lotteries.filter((l: { lottery_start_at: string | null }) => l.lottery_start_at !== null)
   const unknownLotteries = lotteries.filter((l: { lottery_start_at: string | null }) => l.lottery_start_at === null)
 
+  // 天気予報（座標あり＆開催日が16日以内のときのみ。Open-Meteo無料API）
+  const forecast = (festival.lat != null && festival.lng != null && allDates.length > 0 && year?.status !== 'cancelled')
+    ? await fetchForecast(festival.lat, festival.lng, allDates)
+    : []
+
   return (
     <div className="relative min-h-dvh">
       <Stars />
@@ -133,10 +165,10 @@ export default async function FestivalPage(props: { params: Promise<{ id: string
         {/* ヘッダー */}
         <div className="mb-8">
           <div className="mb-3">
-            <p className="text-xs text-white/40 mb-1">{festival.prefecture} {festival.city}</p>
-            <h1 className="text-2xl font-bold text-white/90 leading-tight">{festival.name}</h1>
+            <p className="text-xs text-white/40 mb-1.5 tracking-wide">{festival.prefecture} {festival.city}</p>
+            <h1 className="text-3xl font-extrabold text-aurora leading-tight tracking-tight pb-0.5">{festival.name}</h1>
             {festival.venue && (
-              <p className="text-xs text-white/50 mt-1">📍 {festival.venue}</p>
+              <p className="text-xs text-white/50 mt-1.5">📍 {festival.venue}</p>
             )}
           </div>
 
@@ -193,11 +225,51 @@ export default async function FestivalPage(props: { params: Promise<{ id: string
               🕐 {year.start_time.slice(0, 5)}{year.end_time ? ` 〜 ${year.end_time.slice(0, 5)}` : ' 開始'}
             </p>
           )}
+
+          {/* カレンダー連携 */}
+          {year?.status !== 'cancelled' && allDates.length > 0 && (
+            <div className="mt-5">
+              <AddToCalendar
+                title={festival.name}
+                dates={allDates}
+                startTime={year?.start_time ?? null}
+                endTime={year?.end_time ?? null}
+                location={festival.venue ?? `${festival.prefecture} ${festival.city}`}
+                details={festival.official_url ?? undefined}
+                uidBase={festival.id}
+              />
+            </div>
+          )}
         </div>
+
+        {/* 天気予報（開催日が16日以内のとき） */}
+        {forecast.length > 0 && (
+          <div className="glass-card rounded-2xl p-4 mb-6">
+            <p className="text-xs text-white/30 mb-3">🌤 開催日の天気予報</p>
+            <div className="flex flex-wrap gap-4">
+              {forecast.map(f => (
+                <div key={f.date} className="flex flex-col items-center gap-0.5 min-w-[60px]">
+                  <span className="text-[11px] text-white/50">{dayjs(f.date).format('M/D(dd)')}</span>
+                  <span className="text-2xl leading-none my-0.5">{f.emoji}</span>
+                  <span className="text-[10px] text-white/40">{f.label}</span>
+                  <span className="text-xs">
+                    {f.tmax != null && <span className="text-rose-300">{f.tmax}°</span>}
+                    {f.tmax != null && f.tmin != null && <span className="text-white/30">/</span>}
+                    {f.tmin != null && <span className="text-sky-300">{f.tmin}°</span>}
+                  </span>
+                  {f.precip != null && (
+                    <span className="text-[10px] text-sky-300/80">☔{f.precip}%</span>
+                  )}
+                </div>
+              ))}
+            </div>
+            <p className="text-[9px] text-white/20 mt-3">予報: Open-Meteo（16日先まで）</p>
+          </div>
+        )}
 
         {/* 規模情報 */}
         {year && (year.fireworks_count || year.expected_attendance || year.max_shell_size) && (
-          <div className="glass rounded-2xl p-4 mb-6 flex flex-wrap gap-6">
+          <div className="glass-card rounded-2xl p-4 mb-6 flex flex-wrap gap-6">
             {year.fireworks_count && (
               <div>
                 <p className="text-xs text-white/30 mb-0.5">打ち上げ数</p>
@@ -291,7 +363,7 @@ export default async function FestivalPage(props: { params: Promise<{ id: string
               href={festival.official_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 glass glass-hover rounded-xl py-3 text-sm text-amber-300/80 hover:text-amber-300"
+              className="flex items-center justify-center gap-2 glass-card rounded-xl py-3 text-sm text-amber-300/80 hover:text-amber-300"
             >
               公式サイトで最新情報を確認 →
             </a>

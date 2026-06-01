@@ -6,6 +6,7 @@ import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
 const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://tamaya-iota.vercel.app"),
   title: "Tamaya — 花火大会ガイド",
   description: "全国の花火大会の日程・抽選情報・天気をまとめたガイドアプリ",
   applicationName: "たまや",
@@ -15,6 +16,18 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
   },
   formatDetection: { telephone: false },
+  openGraph: {
+    title: "Tamaya — 花火大会ガイド",
+    description: "全国の花火大会の日程・抽選情報・天気をまとめたガイドアプリ",
+    siteName: "たまや",
+    locale: "ja_JP",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Tamaya — 花火大会ガイド",
+    description: "全国の花火大会の日程・抽選情報・天気をまとめたガイドアプリ",
+  },
 };
 
 export const viewport: Viewport = {

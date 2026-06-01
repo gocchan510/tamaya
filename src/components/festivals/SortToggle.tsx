@@ -34,8 +34,8 @@ export function SortToggle() {
           disabled={isPending}
           className={`px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap ${
             current === key
-              ? 'bg-amber-400/90 text-night-950 shadow-sm'
-              : 'text-white/60 hover:text-white/90'
+              ? 'text-[#1a1208] bg-gradient-to-br from-gold-300 to-gold-400 shadow-[0_2px_12px_rgba(251,191,36,0.25)]'
+              : 'text-white/55 hover:text-white/90'
           }`}
         >
           {label}

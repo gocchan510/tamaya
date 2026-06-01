@@ -56,8 +56,8 @@ export function SourceFilter() {
     startTransition(() => router.push(`${pathname}?${params.toString()}`))
   }
 
-  const inactive = 'bg-white/5 text-white/50 border-white/10 hover:text-white/80 hover:border-white/20'
-  const baseBtn = 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-all duration-200 border whitespace-nowrap'
+  const inactive = 'bg-white/5 text-white/45 hover:text-white/85 hover:bg-white/10'
+  const baseBtn = 'inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 whitespace-nowrap'
 
   return (
     <div className="flex flex-col items-center gap-1.5 w-full max-w-2xl">

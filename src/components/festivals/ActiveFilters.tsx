@@ -43,6 +43,9 @@ export function ActiveFilters() {
   type Chip = { label: string; onRemove: () => void }
   const chips: Chip[] = []
 
+  // 検索キーワード
+  const q = (searchParams.get('q') ?? '').trim()
+  if (q) chips.push({ label: `検索「${q}」`, onRemove: () => removeParam('q') })
   // 規模（デフォルトと異なる場合のみ）
   const tier = searchParams.get('tier')
   if (tier && tier !== TIER_DEFAULT) {

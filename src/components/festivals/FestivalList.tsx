@@ -3,6 +3,7 @@ import { useSearchParams } from 'next/navigation'
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { FestivalCard } from './FestivalCard'
 import { ActiveFilters } from './ActiveFilters'
+import { ClearFiltersButton } from './ClearFiltersButton'
 import { useFavorites } from '@/hooks/useFavorites'
 import type { Festival, FestivalYear, LotteryPeriod } from '@/types'
 
@@ -184,40 +185,27 @@ export function FestivalList({ festivals }: { festivals: FestivalWithYears[] }) 
   }, [list.length])
   const shown = list.slice(0, visible)
 
+  // お気に入りタブが空 → お気に入り登録を促す（フィルタ解除は無関係）
   if (tab === 'favorites' && loaded && list.length === 0) {
     return (
       <p className="text-center text-white/40 text-sm py-12">
         まだお気に入り登録された大会はありません<br/>
-        <span className="text-white/30 text-xs mt-2 inline-block">カード右上の♡をタップで追加</span>
+        <span className="text-white/30 text-xs mt-2 inline-block">カレンダーで日付をタップ、または詳細ページの♡で追加</span>
       </p>
     )
   }
-  if (filter === 'open' && list.length === 0) {
+  // 通常タブで0件 → 何で絞っているか見せて、個別解除/全解除を促す
+  if (list.length === 0) {
     return (
-      <p className="text-center text-white/40 text-sm py-12">
-        現在受付中の有料席はありません
-      </p>
-    )
-  }
-  if (month && list.length === 0) {
-    return (
-      <p className="text-center text-white/40 text-sm py-12">
-        {month}月開催の大会はありません
-      </p>
-    )
-  }
-  if ((from || to) && list.length === 0) {
-    return (
-      <p className="text-center text-white/40 text-sm py-12">
-        指定期間に開催の大会はありません
-      </p>
-    )
-  }
-  if (q && list.length === 0) {
-    return (
-      <p className="text-center text-white/40 text-sm py-12">
-        「{q}」に一致する大会はありません
-      </p>
+      <div className="flex flex-col items-center gap-4 py-12 text-center">
+        <p className="text-4xl opacity-40">🎇</p>
+        <p className="text-white/50 text-sm">条件に合う大会が見つかりませんでした</p>
+        <div className="flex flex-wrap justify-center max-w-md">
+          <ActiveFilters />
+        </div>
+        <p className="text-white/30 text-xs">チップの ✕ で個別に外すか、まとめて解除できます</p>
+        <ClearFiltersButton />
+      </div>
     )
   }
 
@@ -228,6 +216,7 @@ export function FestivalList({ festivals }: { festivals: FestivalWithYears[] }) 
       <p className="text-xs text-white/40 -mt-1 mb-1">
         該当 <span className="text-white/70 font-semibold">{list.length}</span> 件
       </p>
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 items-start">
       {shown.map((festival, i) => {
         const year = festival.festival_years?.[0] ?? null
         const lotteries = year?.lottery_periods ?? []
@@ -261,6 +250,7 @@ export function FestivalList({ festivals }: { festivals: FestivalWithYears[] }) 
           />
         )
       })}
+      </div>
       {/* 末尾センチネル: 交差で次の PAGE 件を追加 */}
       {visible < list.length && (
         <div ref={sentinelRef} className="py-6 text-center text-white/30 text-xs">

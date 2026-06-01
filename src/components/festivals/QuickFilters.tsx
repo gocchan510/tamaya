@@ -45,11 +45,9 @@ export function QuickFilters() {
     startTransition(() => router.push(`${pathname}?${params.toString()}`))
   }
 
-  const base = 'inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-medium transition-all duration-200 border whitespace-nowrap'
-
   return (
-    <div className="flex items-center gap-2 flex-wrap justify-center">
-      <span className="text-[10px] text-white/30 mr-0.5">📅 すぐ行ける:</span>
+    <div className="flex items-center gap-1.5 flex-wrap justify-center">
+      <span className="text-[10px] text-white/30 mr-0.5">📅 すぐ行ける</span>
       {ranges.map(r => {
         const f = r.from.format('YYYY-MM-DD')
         const t = r.to.format('YYYY-MM-DD')
@@ -59,11 +57,7 @@ export function QuickFilters() {
             key={r.key}
             onClick={() => apply(r.from, r.to)}
             disabled={isPending}
-            className={`${base} ${
-              active
-                ? 'bg-amber-400/90 text-night-950 border-amber-400/90'
-                : 'bg-white/5 text-white/60 border-white/10 hover:text-white/90 hover:border-white/20'
-            }`}
+            className={`pill whitespace-nowrap ${active ? 'pill-active' : ''}`}
           >
             {r.label}
           </button>

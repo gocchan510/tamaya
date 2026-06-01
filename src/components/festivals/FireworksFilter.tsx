@@ -34,11 +34,9 @@ export function FireworksFilter() {
     startTransition(() => router.push(`${pathname}?${params.toString()}`))
   }
 
-  const base = 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-all duration-200 border whitespace-nowrap'
-
   return (
     <div className="flex items-center gap-1.5 flex-wrap justify-center">
-      <span className="text-[10px] text-white/30 mr-1">打上数:</span>
+      <span className="text-[10px] text-white/30 mr-1">打上数</span>
       {BANDS.map(b => {
         const active = curMin === b.min && curMax === (b.max ?? 0)
         return (
@@ -46,11 +44,7 @@ export function FireworksFilter() {
             key={b.key}
             onClick={() => set(b)}
             disabled={isPending}
-            className={`${base} ${
-              active
-                ? 'bg-amber-400/90 text-night-950 border-amber-400/90'
-                : 'bg-white/5 text-white/50 border-white/10 hover:text-white/80 hover:border-white/20'
-            }`}
+            className={`pill whitespace-nowrap ${active ? 'pill-active' : ''} disabled:opacity-100`}
           >
             {b.label}
           </button>

@@ -27,8 +27,8 @@ export function TabSwitcher() {
         disabled={isPending}
         className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
           current === 'all'
-            ? 'bg-amber-400/90 text-night-950 shadow-sm'
-            : 'text-white/60 hover:text-white/90'
+            ? 'text-[#1a1208] bg-gradient-to-br from-gold-300 to-gold-400 shadow-[0_2px_12px_rgba(251,191,36,0.25)]'
+            : 'text-white/55 hover:text-white/90'
         }`}
       >
         すべて
@@ -38,14 +38,14 @@ export function TabSwitcher() {
         disabled={isPending}
         className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
           current === 'favorites'
-            ? 'bg-pink-500/90 text-night-950 shadow-sm'
-            : 'text-white/60 hover:text-white/90'
+            ? 'text-white bg-gradient-to-br from-pink-500 to-fuchsia-500 shadow-[0_2px_12px_rgba(236,72,153,0.3)]'
+            : 'text-white/55 hover:text-white/90'
         }`}
       >
-        <span>{current === 'favorites' ? '♥' : '♡'}</span>
+        <span>{current === 'favorites' ? '❤️' : '🤍'}</span>
         お気に入り
         {loaded && count > 0 && (
-          <span className={`text-xs ${current === 'favorites' ? 'text-night-950/70' : 'text-white/40'}`}>
+          <span className={`text-xs ${current === 'favorites' ? 'text-white/75' : 'text-white/40'}`}>
             ({count})
           </span>
         )}

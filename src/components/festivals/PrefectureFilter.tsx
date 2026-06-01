@@ -31,9 +31,9 @@ export function PrefectureFilter({ available }: { available: string[] }) {
     startTransition(() => router.push(`${pathname}?${params.toString()}`))
   }
 
-  const baseBtn = 'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-200 border whitespace-nowrap'
-  const inactive = 'bg-white/5 text-white/50 border-white/10 hover:text-white/80 hover:border-white/20'
-  const activeCls = 'bg-violet-500/90 text-night-950 border-violet-500/90'
+  const baseBtn = 'inline-flex items-center px-2.5 py-1.5 rounded-full text-xs font-medium transition-all duration-200 whitespace-nowrap'
+  const inactive = 'bg-white/5 text-white/45 hover:text-white/85 hover:bg-white/10'
+  const activeCls = 'bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white shadow-[0_2px_12px_rgba(167,139,250,0.25)]'
 
   // 簡略表示用（「県」「都」「府」を除く）
   const shortName = (p: string) => p.replace(/[都府県]$/, '')

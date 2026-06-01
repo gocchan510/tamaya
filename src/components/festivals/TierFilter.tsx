@@ -3,11 +3,11 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { useTransition } from 'react'
 
 const TIERS = [
-  { key: 'xl', label: '🏆 大規模', cls: 'bg-amber-400/90 text-night-950 border-amber-400/90' },
-  { key: 'l',  label: '⭐ 中規模', cls: 'bg-sky-500/90 text-night-950 border-sky-500/90' },
-  { key: 'm',  label: '◇ 小規模', cls: 'bg-white/30 text-white/90 border-white/40' },
-  { key: 's',  label: '・ 極小',   cls: 'bg-white/15 text-white/80 border-white/20' },
-  { key: 'unverified', label: '? 規模不明', cls: 'bg-purple-500/30 text-purple-200 border-purple-400/40' },
+  { key: 'xl', label: '🏆 大規模', cls: 'bg-gradient-to-r from-amber-400 to-amber-300 text-night-950 shadow-[0_2px_12px_rgba(251,191,36,0.25)]' },
+  { key: 'l',  label: '⭐ 中規模', cls: 'bg-gradient-to-r from-sky-500 to-sky-400 text-night-950 shadow-[0_2px_12px_rgba(56,189,248,0.22)]' },
+  { key: 'm',  label: '◇ 小規模', cls: 'bg-white/25 text-white' },
+  { key: 's',  label: '・ 極小',   cls: 'bg-white/12 text-white/85' },
+  { key: 'unverified', label: '? 規模不明', cls: 'bg-purple-500/40 text-purple-100' },
 ] as const
 
 export function TierFilter() {
@@ -28,8 +28,8 @@ export function TierFilter() {
     startTransition(() => router.push(`${pathname}?${params.toString()}`))
   }
 
-  const inactive = 'bg-white/5 text-white/50 border-white/10 hover:text-white/80 hover:border-white/20'
-  const baseBtn = 'inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-all duration-200 border whitespace-nowrap'
+  const inactive = 'bg-white/5 text-white/45 hover:text-white/85 hover:bg-white/10'
+  const baseBtn = 'inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 whitespace-nowrap'
 
   return (
     <div className="flex items-center gap-1.5 flex-wrap justify-center">

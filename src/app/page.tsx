@@ -13,6 +13,7 @@ import { SourceFilter } from '@/components/festivals/SourceFilter'
 import { PrefectureFilter } from '@/components/festivals/PrefectureFilter'
 import { TabSwitcher } from '@/components/festivals/TabSwitcher'
 import { FilterDisclosure } from '@/components/festivals/FilterDisclosure'
+import { CalendarDisclosure } from '@/components/festivals/CalendarDisclosure'
 import { QuickFilters } from '@/components/festivals/QuickFilters'
 import { DebugToggle } from '@/components/festivals/DebugToggle'
 import { ShareFavoritesButton, FavoritesImporter } from '@/components/festivals/ShareFavorites'
@@ -64,11 +65,11 @@ export default async function Home() {
     <div className="relative min-h-dvh">
       <Stars />
 
-      <div className="relative z-10 max-w-2xl mx-auto px-4 pb-16">
+      <div className="relative z-10 max-w-2xl lg:max-w-7xl mx-auto px-4 pb-16">
         {/* ヘッダー */}
         <header className="pt-14 pb-10 text-center">
           <p className="text-xs tracking-[0.3em] text-amber-400/60 uppercase mb-3">Japan Fireworks Guide</p>
-          <h1 className="text-4xl font-bold tracking-tight glow-gold text-amber-300 mb-1">
+          <h1 className="text-5xl font-extrabold tracking-tight text-aurora mb-1 pb-1">
             たまや
           </h1>
           <p className="text-sm text-white/30 tracking-widest">TAMAYA</p>
@@ -77,49 +78,58 @@ export default async function Home() {
           </p>
         </header>
 
-        {/* タブ + ソート + フィルタ */}
-        <div className="flex flex-col items-center gap-3 mb-8">
-          <Suspense>
-            <FavoritesImporter />
-          </Suspense>
-          <Suspense>
-            <ShareFavoritesButton />
-          </Suspense>
-          <Suspense>
-            <DebugToggle />
-          </Suspense>
-          <Suspense>
-            <TabSwitcher />
-          </Suspense>
-          <Suspense>
-            <SearchBox candidates={all.map(f => ({ id: f.id, name: f.name, prefecture: f.prefecture, city: f.city, tier: f.tier }))} />
-          </Suspense>
-          <Suspense>
-            <QuickFilters />
-          </Suspense>
-          <Suspense>
-            <SortToggle />
-          </Suspense>
-          <Suspense>
-            <EventCalendar festivals={all} />
-          </Suspense>
-          {/* 詳細フィルタは折りたたみに格納（デフォルト閉じ・アクティブ数バッジ付き） */}
-          <Suspense>
-            <FilterDisclosure>
-              <PrefectureFilter available={availablePrefectures} />
-              <TierFilter />
-              <FireworksFilter />
-              <DateStatusFilter />
-              <SourceFilter />
-              <MonthFilter />
-              <FilterToggle />
-            </FilterDisclosure>
-          </Suspense>
+        {/* PC: 左サイドバー(操作系) + 右メイン(一覧) の2ペイン / モバイル: 縦積み */}
+        <div className="lg:grid lg:grid-cols-[320px_1fr] lg:gap-8 lg:items-start">
+          {/* 左: 操作系（PCでは sticky で追従） */}
+          <aside className="flex flex-col items-center gap-3 mb-8 lg:mb-0 lg:sticky lg:top-4 lg:self-start">
+            <Suspense>
+              <FavoritesImporter />
+            </Suspense>
+            <Suspense>
+              <ShareFavoritesButton />
+            </Suspense>
+            <Suspense>
+              <DebugToggle />
+            </Suspense>
+            <Suspense>
+              <TabSwitcher />
+            </Suspense>
+            <Suspense>
+              <SearchBox candidates={all.map(f => ({ id: f.id, name: f.name, prefecture: f.prefecture, city: f.city, tier: f.tier }))} />
+            </Suspense>
+            <Suspense>
+              <QuickFilters />
+            </Suspense>
+            <Suspense>
+              <SortToggle />
+            </Suspense>
+            {/* 詳細フィルタは折りたたみに格納（デフォルト閉じ・アクティブ数バッジ付き） */}
+            <Suspense>
+              <FilterDisclosure>
+                <PrefectureFilter available={availablePrefectures} />
+                <TierFilter />
+                <FireworksFilter />
+                <DateStatusFilter />
+                <SourceFilter />
+                <MonthFilter />
+                <FilterToggle />
+              </FilterDisclosure>
+            </Suspense>
+          </aside>
+
+          {/* 右: 一覧 */}
+          <main className="min-w-0">
+            <Suspense>
+              <FestivalList festivals={all} />
+            </Suspense>
+          </main>
         </div>
 
-        {/* 一覧 */}
+        {/* カレンダーは右下フローティングボタンで常時アクセス可（押すとモーダル全幅） */}
         <Suspense>
-          <FestivalList festivals={all} />
+          <CalendarDisclosure>
+            <EventCalendar festivals={all} />
+          </CalendarDisclosure>
         </Suspense>
 
         {/* フッター */}

@@ -54,15 +54,9 @@ function getDisplayLotteries(lotteries: LotteryPeriod[]): DisplayLottery[] {
   return []
 }
 
-const RANK_COLORS: Record<number, string> = {
-  1: 'text-amber-300 glow-gold',
-  2: 'text-slate-300',
-  3: 'text-amber-600',
-}
-
 const TIER_BADGES: Record<string, { label: string; cls: string }> = {
-  xl: { label: '🏆 XL', cls: 'bg-amber-400/20 text-amber-300 border-amber-400/40' },
-  l:  { label: '⭐ L',  cls: 'bg-sky-500/20 text-sky-300 border-sky-400/40' },
+  xl: { label: '🏆 XL', cls: 'bg-gradient-to-r from-amber-400/25 to-fuchsia-400/20 text-amber-200 border-amber-400/40' },
+  l:  { label: '⭐ L',  cls: 'bg-gradient-to-r from-sky-500/25 to-violet-500/20 text-sky-200 border-sky-400/40' },
   m:  { label: '◇ M',  cls: 'bg-white/10 text-white/60 border-white/15' },
   s:  { label: '・ S',  cls: 'bg-white/5 text-white/40 border-white/10' },
   unverified: { label: '?', cls: 'bg-white/5 text-white/30 border-white/10' },
@@ -144,28 +138,29 @@ export function FestivalCard({ festival, year, rank, rankLabel, referenceDate, f
 
   return (
     <Link href={`/festivals/${festival.id}`} className="block group">
-      <article className="glass glass-hover rounded-2xl p-5 relative overflow-hidden">
+      <article className="glass-card rounded-2xl p-5 relative overflow-hidden">
         {/* 右下: 公式URLリンク（外側が<a>なので、ネスト回避でbuttonにする） */}
         {festival.official_url && (
           <OfficialLinkButton url={festival.official_url} />
         )}
-        {/* 左アクセントライン */}
-        <div className={`absolute left-0 top-4 bottom-4 w-0.5 ${sparkColor} opacity-60 rounded-full`} />
+        {/* 左アクセント: 単色グラデの細バー（上から下へフェード） */}
+        <div className={`absolute left-0 top-5 bottom-5 w-[3px] rounded-full ${sparkColor} opacity-70 [mask-image:linear-gradient(to_bottom,black,transparent)]`} />
+        {/* 右上: オーロラ風のソフトグロー（ホバーで強調） */}
+        <div className="pointer-events-none absolute -top-16 -right-16 w-40 h-40 rounded-full bg-amber-400/[0.06] blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
         <div className="flex items-start gap-4">
-          {/* ランク or 日付ラベル */}
-          {rankLabel ? (
-            <div className="shrink-0 w-14 text-center mt-1 flex flex-col items-center gap-1.5">
+          {/* お気に入りタブ: 左に日付ラベル列（解除ボタン付き） */}
+          {rankLabel && (
+            <div className="shrink-0 w-14 text-center mt-0.5 flex flex-col items-center gap-1.5">
               <div>
                 <div className="text-base font-bold text-red-300 leading-none">{rankLabel}</div>
                 <div className="text-[9px] text-red-300/60 mt-0.5">お気に入り</div>
               </div>
               {festival.tier && TIER_BADGES[festival.tier] && (
-                <span className={`text-[13px] font-bold px-2 py-1 rounded border ${TIER_BADGES[festival.tier].cls}`}>
+                <span className={`text-[13px] font-bold px-2 py-1 rounded-lg border ${TIER_BADGES[festival.tier].cls}`}>
                   {TIER_BADGES[festival.tier].label}
                 </span>
               )}
-              {/* お気に入り解除ボタン群（確認ダイアログ付き） */}
               {favDates && favDates.length > 0 && (
                 <div className="flex flex-col gap-1 w-full">
                   {favDates.map(d => (
@@ -174,51 +169,49 @@ export function FestivalCard({ festival, year, rank, rankLabel, referenceDate, f
                 </div>
               )}
             </div>
-          ) : (
-            <div className={`rank-badge text-2xl font-bold w-8 shrink-0 text-center leading-none mt-1 ${RANK_COLORS[rank] ?? 'text-white/40'}`}>
-              {rank}
-            </div>
           )}
 
           {/* メイン情報 */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
-                  <p className="text-xs text-white/40">
-                    {festival.prefecture} {festival.city}
-                  </p>
-                  {!rankLabel && festival.tier && TIER_BADGES[festival.tier] && (
-                    <span className={`text-[9px] px-1.5 py-px rounded border ${TIER_BADGES[festival.tier].cls}`}>
-                      {TIER_BADGES[festival.tier].label}
-                    </span>
-                  )}
-                  {debug && (festival.sources ?? []).map(src => SOURCE_BADGES[src] && (
-                    <span key={src} className={`text-[9px] px-1.5 py-px rounded border ${SOURCE_BADGES[src].cls}`} title={src}>
-                      {SOURCE_BADGES[src].label}
-                    </span>
-                  ))}
-                </div>
-                <h2 className="text-base font-semibold text-white/90 leading-tight group-hover:text-amber-300 transition-colors">
-                  {festival.name}
-                </h2>
+            {/* 上段: ティア + 地名（左） / ランク#N（右） */}
+            <div className="flex items-center justify-between gap-2 mb-1.5">
+              <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
+                {!rankLabel && festival.tier && TIER_BADGES[festival.tier] && (
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${TIER_BADGES[festival.tier].cls}`}>
+                    {TIER_BADGES[festival.tier].label}
+                  </span>
+                )}
+                <span className="text-xs text-white/45 truncate">
+                  {festival.prefecture} {festival.city}
+                </span>
+                {debug && (festival.sources ?? []).map(src => SOURCE_BADGES[src] && (
+                  <span key={src} className={`text-[9px] px-1.5 py-px rounded border ${SOURCE_BADGES[src].cls}`} title={src}>
+                    {SOURCE_BADGES[src].label}
+                  </span>
+                ))}
               </div>
+              {!rankLabel && (
+                <span className="shrink-0 text-[11px] font-mono text-white/20 tabular-nums">#{rank}</span>
+              )}
+            </div>
 
-              {/* 開催日まで + お気に入り */}
+            {/* 主役: 大会名 + カウントダウン */}
+            <div className="flex items-start justify-between gap-3">
+              <h2 className="text-lg font-bold text-white leading-snug tracking-tight group-hover:text-amber-200 transition-colors">
+                {festival.name}
+              </h2>
               <div className="flex items-start gap-2 shrink-0">
                 {year?.status === 'cancelled' ? (
-                  <span className="text-xs text-red-400/60">中止</span>
+                  <span className="text-xs text-red-400/70 font-medium mt-1">中止</span>
                 ) : days !== null && days >= 0 && (
-                  <div className="text-right">
-                    {days === 0 ? (
-                      <span className="text-xs font-bold text-emerald-400 glow-ember">本日開催</span>
-                    ) : (
-                      <div>
-                        <span className="text-lg font-bold text-amber-300">{days}</span>
-                        <span className="text-xs text-white/40 ml-0.5">日後</span>
-                      </div>
-                    )}
-                  </div>
+                  days === 0 ? (
+                    <span className="text-sm font-bold text-emerald-400 glow-ember mt-1">本日開催</span>
+                  ) : (
+                    <div className="text-right leading-none">
+                      <span className="text-2xl font-extrabold text-aurora tabular-nums">{days}</span>
+                      <span className="block text-[10px] text-white/40 mt-1">日後</span>
+                    </div>
+                  )
                 )}
                 {showFav && contextDate && (
                   <FavoriteButton festivalId={festival.id} date={contextDate} size="sm" showLabel />
@@ -227,7 +220,7 @@ export function FestivalCard({ festival, year, rank, rankLabel, referenceDate, f
             </div>
 
             {/* 日程 + 確定バッジ */}
-            <div className="flex items-center gap-2 mt-1.5">
+            <div className="flex items-center gap-2 mt-2">
               {year?.status === 'cancelled' ? (
                 <span className="text-xs text-red-400/70">開催中止</span>
               ) : year?.event_dates && year.event_dates.length > 0 ? (
@@ -284,7 +277,9 @@ export function FestivalCard({ festival, year, rank, rankLabel, referenceDate, f
 
             {/* 抽選/有料席情報（受付中は全部、それ以外は1件） */}
             {displayLotteries.length > 0 && (
-              <div className="mt-3 flex flex-col gap-1.5">
+              <>
+              <div className="hairline mt-3.5 mb-0.5" />
+              <div className="mt-2 flex flex-col gap-1.5">
                 {displayLotteries.map(({ lottery, state }) => (
                   <div
                     key={lottery.id}
@@ -325,6 +320,7 @@ export function FestivalCard({ festival, year, rank, rankLabel, referenceDate, f
                   </div>
                 ))}
               </div>
+              </>
             )}
           </div>
         </div>
