@@ -5,6 +5,8 @@ import { FestivalCard } from './FestivalCard'
 import { ActiveFilters } from './ActiveFilters'
 import { ClearFiltersButton } from './ClearFiltersButton'
 import { useFavorites } from '@/hooks/useFavorites'
+import { useHomeBase } from '@/hooks/useHomeBase'
+import { haversineKm } from '@/lib/distance'
 import type { Festival, FestivalYear, LotteryPeriod } from '@/types'
 
 type FestivalWithYears = Festival & { festival_years: (FestivalYear & { lottery_periods: LotteryPeriod[] })[] }
@@ -66,6 +68,7 @@ export function FestivalList({ festivals }: { festivals: FestivalWithYears[] }) 
   const minFw = parseInt(searchParams.get('minfw') ?? '0', 10) || 0
   const maxFw = parseInt(searchParams.get('maxfw') ?? '0', 10) || 0
   const { festivalIds, datesOf, loaded } = useFavorites()
+  const { homeBase } = useHomeBase()
   const debug = searchParams.get('debug') === '1'
   // from===to の場合、その日付をカードの ♥ コンテキストとして渡す
   const contextDate = from && to && from === to ? from : null
@@ -163,9 +166,15 @@ export function FestivalList({ festivals }: { festivals: FestivalWithYears[] }) 
       l = [...l].sort((a, b) => (b.festival_years?.[0]?.expected_attendance ?? 0) - (a.festival_years?.[0]?.expected_attendance ?? 0))
     } else if (sort === 'shell') {
       l = [...l].sort((a, b) => shellSizeNumeric(b.festival_years?.[0]?.max_shell_size) - shellSizeNumeric(a.festival_years?.[0]?.max_shell_size))
+    } else if (sort === 'distance' && homeBase) {
+      l = [...l].sort((a, b) => {
+        const da = (a.lat && a.lng) ? haversineKm(homeBase.lat, homeBase.lng, a.lat, a.lng) : Infinity
+        const db = (b.lat && b.lng) ? haversineKm(homeBase.lat, homeBase.lng, b.lat, b.lng) : Infinity
+        return da - db
+      })
     }
     return l
-  }, [festivals, tab, sort, filter, month, from, to, tierSet, dstatusSet, q, sourceSet, prefSet, minFw, maxFw, festivalIds, datesOf, loaded])
+  }, [festivals, tab, sort, filter, month, from, to, tierSet, dstatusSet, q, sourceSet, prefSet, minFw, maxFw, festivalIds, datesOf, loaded, homeBase])
 
   // 段階表示: 初期 PAGE 件だけ描画し、末尾到達で追加（全件DOM mount を回避）
   const PAGE = 40
@@ -235,6 +244,9 @@ export function FestivalList({ festivals }: { festivals: FestivalWithYears[] }) 
             favDatesProp = ds
           }
         }
+        const distKm = (sort === 'distance' && homeBase && festival.lat && festival.lng)
+          ? haversineKm(homeBase.lat, homeBase.lng, festival.lat, festival.lng)
+          : undefined
         return (
           <FestivalCard
             key={festival.id}
@@ -247,6 +259,7 @@ export function FestivalList({ festivals }: { festivals: FestivalWithYears[] }) 
             lotteries={lotteries}
             contextDate={contextDate}
             debug={debug}
+            distKm={distKm}
           />
         )
       })}

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { Festival, FestivalYear, LotteryPeriod } from '@/types'
+import { fmtKm } from '@/lib/distance'
 import dayjs from 'dayjs'
 import 'dayjs/locale/ja'
 import { FavoriteButton } from './FavoriteButton'
@@ -23,6 +24,8 @@ interface Props {
   contextDate?: string | null
   /** デバッグモード: ソースバッジ等を表示 */
   debug?: boolean
+  /** 拠点からの距離（km）。距離順ソート時のみ渡す */
+  distKm?: number
 }
 
 type DisplayLottery = { lottery: LotteryPeriod; state: 'open' | 'upcoming' | 'ended' }
@@ -115,7 +118,7 @@ function formatCount(n: number): string {
   return n.toLocaleString()
 }
 
-export function FestivalCard({ festival, year, rank, rankLabel, referenceDate, favDates, lotteries = [], contextDate = null, debug = false }: Props) {
+export function FestivalCard({ festival, year, rank, rankLabel, referenceDate, favDates, lotteries = [], contextDate = null, debug = false, distKm }: Props) {
   const days = daysUntil(referenceDate ?? year?.date ?? null)
   const sparkColor = SPARK_COLORS[rank % SPARK_COLORS.length]
   const displayLotteries = getDisplayLotteries(lotteries)
@@ -184,6 +187,11 @@ export function FestivalCard({ festival, year, rank, rankLabel, referenceDate, f
                 <span className="text-xs text-white/45 truncate">
                   {festival.prefecture} {festival.city}
                 </span>
+                {distKm !== undefined && (
+                  <span className="text-[10px] px-1.5 py-px rounded border border-sky-400/30 text-sky-300/70 shrink-0">
+                    📍 {fmtKm(distKm)}
+                  </span>
+                )}
                 {debug && (festival.sources ?? []).map(src => SOURCE_BADGES[src] && (
                   <span key={src} className={`text-[9px] px-1.5 py-px rounded border ${SOURCE_BADGES[src].cls}`} title={src}>
                     {SOURCE_BADGES[src].label}

@@ -7,6 +7,7 @@ const SORTS = [
   { key: 'fireworks',  label: '打上数' },
   { key: 'attendance', label: '来場者' },
   { key: 'shell',      label: '号数' },
+  { key: 'distance',   label: '距離順' },
 ] as const
 
 export function SortToggle() {
@@ -17,9 +18,12 @@ export function SortToggle() {
   const current = searchParams.get('sort') ?? 'ranking'
 
   const set = (sort: string) => {
-    // ソートはDB全体のランキング前提 → 全フィルタを解除してデフォルトに戻す
-    const params = new URLSearchParams()
+    // 距離順はフィルタ維持、それ以外はフィルタリセット
+    const params = sort === 'distance'
+      ? new URLSearchParams(searchParams.toString())
+      : new URLSearchParams()
     if (sort !== 'ranking') params.set('sort', sort)
+    else params.delete('sort')
     startTransition(() => {
       router.push(params.toString() ? `${pathname}?${params.toString()}` : pathname)
     })
