@@ -22,6 +22,7 @@ import { FestivalList } from '@/components/festivals/FestivalList'
 import { EventCalendar } from '@/components/festivals/EventCalendar'
 import { HomeBaseSettings } from '@/components/festivals/HomeBaseSettings'
 import { UpdateBanner } from '@/components/festivals/UpdateBanner'
+import { MobileLayout } from '@/components/festivals/MobileLayout'
 import { LATEST } from '@/lib/changelog'
 import { Stars } from '@/components/ui/Stars'
 import type { Festival, FestivalYear, LotteryPeriod } from '@/types'
@@ -38,7 +39,6 @@ export default async function Home() {
     for (let from = 0; ; from += pageSize) {
       const { data, error } = await supabase
         .from('festivals')
-        // カード/リスト/カレンダー/検索で実際に使う列だけに絞る（description等の重い未使用列を送らない）
         .select(`
           id, name, prefecture, city, lat, lng, official_url, tier, sources,
           festival_years(
@@ -60,17 +60,16 @@ export default async function Home() {
   const festivals = await fetchAllFestivals()
 
   const all = festivals
-
-  // 都道府県の一覧（重複排除）
   const availablePrefectures = Array.from(new Set(all.map(f => f.prefecture))).sort()
+  const candidates = all.map(f => ({ id: f.id, name: f.name, prefecture: f.prefecture, city: f.city, tier: f.tier }))
 
   return (
     <div className="relative min-h-dvh">
       <Stars />
 
-      <div className="relative z-10 max-w-2xl lg:max-w-7xl mx-auto px-4 pb-16">
+      <div className="relative z-10 max-w-2xl lg:max-w-7xl mx-auto px-4 pb-28 lg:pb-16">
         {/* ヘッダー */}
-        <header className="pt-14 pb-10 text-center">
+        <header className="pt-14 pb-6 text-center">
           <p className="text-xs tracking-[0.3em] text-amber-400/60 uppercase mb-3">Japan Fireworks Guide</p>
           <h1 className="text-5xl font-extrabold tracking-tight text-aurora mb-1 pb-1">
             たまや
@@ -88,33 +87,27 @@ export default async function Home() {
           </Suspense>
         </header>
 
-        {/* PC: 左サイドバー(操作系) + 右メイン(一覧) の2ペイン / モバイル: 縦積み */}
+        {/* モバイル: 上部コントロール + 底部タブバー + カレンダー/検索モーダル */}
+        <MobileLayout
+          festivals={all}
+          candidates={candidates}
+          availablePrefectures={availablePrefectures}
+        />
+
+        {/* PC: 左サイドバー + 右メイン */}
         <div className="lg:grid lg:grid-cols-[320px_1fr] lg:gap-8 lg:items-start">
-          {/* 左: 操作系（PCでは sticky で追従） */}
-          <aside className="flex flex-col items-center gap-3 mb-8 lg:mb-0 lg:sticky lg:top-4 lg:self-start">
+          {/* 左サイドバー（PCのみ） */}
+          <aside className="hidden lg:flex flex-col items-center gap-3 lg:sticky lg:top-4 lg:self-start">
+            <Suspense><FavoritesImporter /></Suspense>
+            <Suspense><ShareFavoritesButton /></Suspense>
+            <Suspense><DebugToggle /></Suspense>
+            <Suspense><TabSwitcher /></Suspense>
             <Suspense>
-              <FavoritesImporter />
+              <SearchBox candidates={candidates} />
             </Suspense>
-            <Suspense>
-              <ShareFavoritesButton />
-            </Suspense>
-            <Suspense>
-              <DebugToggle />
-            </Suspense>
-            <Suspense>
-              <TabSwitcher />
-            </Suspense>
-            <Suspense>
-              <SearchBox candidates={all.map(f => ({ id: f.id, name: f.name, prefecture: f.prefecture, city: f.city, tier: f.tier }))} />
-            </Suspense>
-            <Suspense>
-              <QuickFilters />
-            </Suspense>
-            <Suspense>
-              <SortToggle />
-            </Suspense>
+            <Suspense><QuickFilters /></Suspense>
+            <Suspense><SortToggle /></Suspense>
             <HomeBaseSettings />
-            {/* 詳細フィルタは折りたたみに格納（デフォルト閉じ・アクティブ数バッジ付き） */}
             <Suspense>
               <FilterDisclosure>
                 <PrefectureFilter available={availablePrefectures} />
@@ -128,7 +121,7 @@ export default async function Home() {
             </Suspense>
           </aside>
 
-          {/* 右: 一覧 */}
+          {/* 右: 一覧（PC・モバイル共通） */}
           <main className="min-w-0">
             <Suspense>
               <FestivalList festivals={all} />
@@ -136,14 +129,13 @@ export default async function Home() {
           </main>
         </div>
 
-        {/* カレンダーは右下フローティングボタンで常時アクセス可（押すとモーダル全幅） */}
+        {/* カレンダーFAB（PCのみ、モバイルはタブバーから） */}
         <Suspense>
           <CalendarDisclosure>
             <EventCalendar festivals={all} />
           </CalendarDisclosure>
         </Suspense>
 
-        {/* フッター */}
         <footer className="text-center mt-12 text-white/20 text-xs">
           © 2025 Tamaya
         </footer>
