@@ -14,7 +14,7 @@ type TabKey = typeof TABS[number]['key']
 function Inner({
   activeTab,
   onCalendar,
-  onSearch,
+  onMap,
   onList,
   onFavorites,
 }: {
